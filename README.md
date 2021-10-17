@@ -1,3 +1,3 @@
 # compiler-project
-Project of design of compilers course
+Design of compilers course project
 written in python to interpret C-minus programs
