@@ -1,1 +1,1 @@
-40.	'(~, Invalid Input) '
+There is no lexical error.

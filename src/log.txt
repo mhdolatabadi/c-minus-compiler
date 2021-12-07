@@ -72,7 +72,7 @@ Files ./tokens.txt and ./tests/T02/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-16.	'(~, Invalid Input) '												    /	There is no lexical error.
+There is no lexical error.													There is no lexical error.Files ./lexical_errors.txt and ./tests/T02/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -126,7 +126,7 @@ Files ./tokens.txt and ./tests/T03/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-29.	'(~, Invalid Input) '												    /	There is no lexical error.
+There is no lexical error.													There is no lexical error.Files ./lexical_errors.txt and ./tests/T03/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -180,7 +180,6 @@ Files ./tokens.txt and ./tests/T04/tokens.txt are identical
 11.	'(#, Invalid Input) '												    |	11.	(#, Invalid input) 																
 12.	'(!, Invalid Input) '												    |	12.	(!, Invalid input) 																
 17.	'(/* end of end of the code\n// hmmmmmm\n@, Invalid Input) (#, Invalid Input) ($, Invalid Input) (#, Invalid Input  <
-18.	'(/~, Invalid Input) '												    <
 
 
               *** symbol_table.txt diffrences ***
@@ -265,7 +264,6 @@ Files ./tokens.txt and ./tests/T05/tokens.txt are identical
               *** lexical_errors.txt diffrences ***
 4.	'(re%, Invalid Input) '												    |	4.	(re%, Invalid input) 																
 8.	'(1sc, Invalid Input) '												    |	8.	(1s, Invalid number) 																
-58.	'(~, Invalid Input) '												    <
 
 
               *** symbol_table.txt diffrences ***
@@ -412,7 +410,6 @@ Files ./tokens.txt and ./tests/T08/tokens.txt are identical
 4.	'(1gh, Invalid Input) '												    |	4.	(1g, Invalid number) 																
 7.	'(hell$, Invalid Input) (ooo&, Invalid Input) '									    |	7.	(hell$, Invalid input) (ooo&, Invalid input) 																
 8.	'(!, Invalid Input) '												    |	8.	(!, Invalid input) 																
-18.	'(~, Invalid Input) '												    <
 
 
               *** symbol_table.txt diffrences ***
@@ -546,7 +543,7 @@ Files ./tokens.txt and ./tests/T10/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-40.	'(~, Invalid Input) '												    /	There is no lexical error.
+There is no lexical error.													There is no lexical error.Files ./lexical_errors.txt and ./tests/T10/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***

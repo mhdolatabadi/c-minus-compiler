@@ -6,11 +6,9 @@ Files ./lexical_errors.txt and ./tests/T01/lexical_errors.txt differ
 
 
 =====================================>>>>> Running Test ./tests/T02...
-Files ./lexical_errors.txt and ./tests/T02/lexical_errors.txt differ
 
 
 =====================================>>>>> Running Test ./tests/T03...
-Files ./lexical_errors.txt and ./tests/T03/lexical_errors.txt differ
 
 
 =====================================>>>>> Running Test ./tests/T04...
@@ -39,4 +37,3 @@ Files ./lexical_errors.txt and ./tests/T09/lexical_errors.txt differ
 
 
 =====================================>>>>> Running Test ./tests/T10...
-Files ./lexical_errors.txt and ./tests/T10/lexical_errors.txt differ

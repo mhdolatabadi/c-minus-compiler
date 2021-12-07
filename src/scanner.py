@@ -170,7 +170,7 @@ dfa.add_edge(7, 8, legalchars)
 dfa.add_node(9, False)
 dfa.add_node(10, False)
 dfa.add_edge(0, 9, "/")
-# dfa.add_edge(9, 0, legalchars.replace('/', ''))
+dfa.add_edge(9, 0, legalchars.replace('/', ''))
 dfa.add_edge(9, 10, "/")
 dfa.add_edge(10, 10, legalchars + ".")
 dfa.add_node(11, True, "COMMENT")  #comment
@@ -238,10 +238,13 @@ def run():
     token_file.close()
 
     lexical_file = open("lexical_errors.txt", "w")
+    has_error = False
     for i in range(1, len(dfa.lexical_errors) + 1):
-        if (dfa.lexical_errors[i]):
+        if (dfa.lexical_errors[i]
+                and not dfa.lexical_errors[i].__contains__("~")):
+            has_error = True
             lexical_file.write(f"{i}.\t{repr(dfa.lexical_errors[i])}\n")
-    if (not dfa.lexical_errors):
+    if (not dfa.lexical_errors or not has_error):
         lexical_file.write("There is no lexical error.")
     lexical_file.close()
 
