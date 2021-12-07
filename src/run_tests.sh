@@ -3,7 +3,7 @@
 echo "" > log.txt
 echo "" > brief_results.txt
 #for dir in ../PA1_final_tests/*; do
-for dir in ./tests/PA1_input_output_samples/*; do
+for dir in ./tests/*; do
     cp "${dir}/input.txt" ./input.txt
     python3 ./compiler.py
     printf "\n\n\n\n=====================================>>>>> Running Test ${dir}...\n" >> log.txt

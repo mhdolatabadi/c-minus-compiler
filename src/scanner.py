@@ -52,6 +52,8 @@ def token_type_enhancer(dfa, token_type: str):
     if token_type == "ID":
         if (re.match(KEYWORD, dfa.value)):
             return 'KEYWORD'
+        else:
+            dfa.identifiers.append(dfa.value)
     if (token_type == "ASSIGNMENT"):
         return "SYMBOL"
     return token_type
@@ -66,6 +68,7 @@ class DFA:
         self.tokens = dict()
         self.lexical_errors = dict()
         self.last_token = ''
+        self.identifiers = list()
 
     def add_node(self,
                  node_id: int,
@@ -108,7 +111,11 @@ class DFA:
             if token_type not in ignore_tokens:
                 self.value = self.value.replace(" ", "")
                 token_type = token_type_enhancer(self, token_type)
-                self.tokens[line_number] += f"({token_type}, {self.value}) "
+                # bad action
+                self.tokens[line_number].append({
+                    'token_type': token_type,
+                    'value': self.value
+                })
             self.last_token = token_type
             self.value = ''
             return 0
@@ -202,7 +209,7 @@ def run():
     line_number = 1
     current_state = 0
     for line in input_file:
-        dfa.tokens[line_number] = ""
+        dfa.tokens[line_number] = []
         dfa.lexical_errors[line_number] = ""
         for char in line:
             current_state = dfa.get_next_state(current_state, char,
@@ -213,21 +220,42 @@ def run():
                                                    line_number, True)
         line_number += 1
 
-    dfa.tokens[line_number] = ""
+    dfa.tokens[line_number] = []
     dfa.lexical_errors[line_number] = ""
     current_state = dfa.get_next_state(current_state, '~', line_number)
     input_file.close()
 
-    file_writer = open("tokens.txt", "w")
+    token_file = open("tokens.txt", "w")
     for i in range(1, len(dfa.tokens) + 1):
         if (dfa.tokens[i]):
-            file_writer.write(f"{i}.\t{dfa.tokens[i]}\n")
-    file_writer.close()
+            # for structuring an string for line with number i
+            writable = ""
+            for token_dict in dfa.tokens[i]:
+                # extract token dictionray key and value and append it to string which should be write in the file
+                writable += f"({token_dict['token_type']}, {token_dict['value']}) "
+            token_file.write(f"{i}.\t{writable}\n")
 
-    file_writer = open("lexical_errors.txt", "w")
+    token_file.close()
+
+    lexical_file = open("lexical_errors.txt", "w")
     for i in range(1, len(dfa.lexical_errors) + 1):
         if (dfa.lexical_errors[i]):
-            file_writer.write(f"{i}.\t{repr(dfa.lexical_errors[i])}\n")
+            lexical_file.write(f"{i}.\t{repr(dfa.lexical_errors[i])}\n")
     if (not dfa.lexical_errors):
-        file_writer.write("There is no lexical error.")
-    file_writer.close()
+        lexical_file.write("There is no lexical error.")
+    lexical_file.close()
+
+    #symbol table
+    symbol_file = open("symbol_table.txt", "w")
+    keywords = [
+        'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return'
+    ]
+    # add keywords
+    for i in range(1, len(keywords) + 1):
+        symbol_file.write(f"{i}.\t{keywords[i - 1]}\n")
+    # remove redundant elements from list
+    dfa.identifiers = list(dict.fromkeys(dfa.identifiers))
+    for i in range(1, len(dfa.identifiers) + 1):
+        # [i - 1] because range starts with 1
+        symbol_file.write(f"{i + len(keywords)}.\t{dfa.identifiers[i - 1]}\n")
+    symbol_file.close()
