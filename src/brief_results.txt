@@ -1,0 +1,52 @@
+
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T01...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T01/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T01/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T02...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T02/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T02/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T03...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T03/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T03/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T04...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T04/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T04/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T05...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T05/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T05/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T06...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T06/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T06/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T07...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T07/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T07/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T08...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T08/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T08/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T09...
+Files ./tokens.txt and ./tests/PA1_input_output_samples/T09/tokens.txt differ
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T09/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T09/symbol_table.txt differ
+
+
+=====================================>>>>> Running Test ./tests/PA1_input_output_samples/T10...
+Files ./lexical_errors.txt and ./tests/PA1_input_output_samples/T10/lexical_errors.txt differ
+Files ./symbol_table.txt and ./tests/PA1_input_output_samples/T10/symbol_table.txt differ
