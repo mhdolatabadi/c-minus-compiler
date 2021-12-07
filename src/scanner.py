@@ -19,13 +19,13 @@
 #    WHITESPACE: blank(ASCII 32), \n(ASCII 10), \r(ASCII 13), \t(ASCII 9), \v(ASCII 11), \f(ASCII 12)
 
 # Lexical errors must be recorded in a text file called 'lexical_errors.txt'. each error is reported on a separate
-# line as a pair including string and a message with the line number. if the input program lexically correct,
-# sentence 'There is no lexical error.' should be written. * when an invalid character is encountered,
-# a string containing just that character and the message 'Invalid input' should be saved in file. * if comment
-# remains open when end of the input file is countered, record this with just the message 'Unclosed comment'. it is
-# sufficient to print at most the first seven characters of the unclosed comment with three dots. * if there is a
-# '*/' outside a comment, scanner should report this errors as 'Unmatched comment' rather than tokenizing it as * and
-# /. * if you see '125d', you must report this error as 'Invalid number' rather than tokenizing it as a NUM and a ID.
+# line as a pair including string and a message with the line number.
+# * if the input program lexically correct, sentence 'There is no lexical error.' should be written.
+# * when an invalid character is encountered, a string containing just that character and the message 'Invalid input' should be saved in file.
+# * if comment remains open when end of the input file is countered, record this with just the message 'Unclosed comment'. it is
+# sufficient to print at most the first seven characters of the unclosed comment with three dots.
+# * if there is a '*/' outside a comment, scanner should report this errors as 'Unmatched comment' rather than tokenizing it as * and /.
+# * if you see '125d', you must report this error as 'Invalid number' rather than tokenizing it as a NUM and a ID.
 # * the scanner should recognize tokens with at most one lookahead character.
 
 # Scanner should maintain a variable that indicates which line of the input text is currently being scanned. this
@@ -33,32 +33,6 @@
 # WHITESPACE tokens.
 
 # This is scanner module of compiler.
-
-# class DFA:
-#     def __init__(self):
-#         self.terminal_nodes = set()
-#         self.refeed_nodes = set()
-
-#     def add_node(self, node_id: int, is_terminal:bool, token_type: str, is_refeeder: bool):
-#         if is_terminal:
-#             self.terminal_nodes.add(node_id)
-#         self.token_type[node_id] = token_type
-#         if is_refeeder:
-#             self.refeed_nodes.add(node_id)
-#         self.nodes_edges[node_id] = dict()
-
-#     def add_edge(self, from_node: int, to_node: int, chars: typing.Set):
-#         edges_dict = self.nodes_edges[from_node]
-#         for char in chars:
-#             edges_dict[char] = to_node
-
-#     def add_non_sigma_edge(self, from_node: int, to_node: int):
-#         self.non_sigma_edges[from_node] = to_node
-
-#     def init_traversal(self, start_node: int):
-#         self.reset_node = start_node
-#         self.current_node = start_node
-
 import re
 
 KEYWORD = r"if|else|void|int|repeat|break|until|return"
@@ -68,12 +42,30 @@ IDENTIFIER = r"[A-Za-z][A-Za-z0-9]*"
 COMMENT = r"(\/\*.*?\*\/)|(\/{2}.*?\n)"
 WHITESPACE = r"\s"
 
+ignore_tokens = [
+    "WHITESPACE", "NOTHING", "COMMENT", "UNCLOSED COMMENT",
+    "UNMATCHED COMMENT", "INVALID NUMBER"
+]
+
+
+def token_type_enhancer(dfa, token_type: str):
+    if token_type == "ID":
+        if (re.match(KEYWORD, dfa.value)):
+            return 'KEYWORD'
+    if (token_type == "ASSIGNMENT"):
+        return "SYMBOL"
+    return token_type
+
 
 class DFA:
     def __init__(self):
         self.terminal_nodes = set()
         self.nodes_edges = dict()
         self.token_type = dict()
+        self.value = ''
+        self.tokens = dict()
+        self.lexical_errors = dict()
+        self.last_token = ''
 
     def add_node(self,
                  node_id: int,
@@ -89,38 +81,73 @@ class DFA:
         for char in chars:
             self.nodes_edges[from_node][char] = to_node
 
-    def get_next_state(self, state: int, char: str):
-        next_state = self.nodes_edges[state][char]
+    def get_next_state(self,
+                       current_state: int,
+                       char: str,
+                       line_number: int,
+                       lookahead: bool = False):
+        try:
+            next_state = self.nodes_edges[current_state][char]
+            token_type = self.token_type[next_state]
+        except KeyError:
+            self.value += char
+            if not lookahead:
+                #invalid input
+                self.lexical_errors[
+                    line_number] += f"({self.value}, Invalid Input) "
+            self.value = ''
+            return 0
         if next_state in self.terminal_nodes:
-            return self.token_type[next_state]
+            if self.last_token == "SYMBOL" and lookahead:
+                return 0
+            if token_type in ["SYMBOL", "COMMENT", "UNMATCHED COMMENT"]:
+                self.value += char
+            if token_type in ["UNMATCHED COMMENT", "INVALID NUMBER"]:
+                self.lexical_errors[
+                    line_number] += f"({self.value}, {token_type.title()}) "
+            if token_type not in ignore_tokens:
+                self.value = self.value.replace(" ", "")
+                token_type = token_type_enhancer(self, token_type)
+                self.tokens[line_number] += f"({token_type}, {self.value}) "
+            self.last_token = token_type
+            self.value = ''
+            return 0
         else:
+            self.value += char
             return next_state
 
 
 letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 digit = "0123456789"
-symbol = ";:,[({])}+-*=<"
+symbol = ";:,[({])}+-=<"
+whitespace = "\n\r\f\t\v "
+legalchars = letter + digit + whitespace + symbol + "/"
 
 dfa = DFA()
-#start
 
 #id or keyword
 dfa.add_node(0, False)
 dfa.add_edge(0, 1, letter)
 dfa.add_node(1, False)
 dfa.add_edge(1, 1, letter + digit)
-dfa.add_node(2, True, "WORD")
-dfa.add_edge(1, 2, "@")
+dfa.add_node(2, True, "ID")
+dfa.add_edge(1, 2, legalchars.replace(letter + digit, ''))
 
 #numbers
 dfa.add_node(3, False)
 dfa.add_edge(0, 3, digit)
 dfa.add_edge(3, 3, digit)
-dfa.add_node(4, True, "NUMBER")
-dfa.add_edge(3, 4, "@")
+dfa.add_node(4, True, "NUM")
+dfa.add_edge(3, 4, whitespace + symbol + '~')
+
+# invalid number
+dfa.add_node(18, False)
+dfa.add_edge(3, 18, letter)
+dfa.add_node(19, True, 'INVALID NUMBER')
+dfa.add_edge(18, 19, legalchars.replace(letter, ''))
 
 #symbols
-dfa.add_node(5, True)
+dfa.add_node(5, True, "SYMBOL")
 dfa.add_edge(0, 5, symbol)
 
 # == and =
@@ -128,36 +155,42 @@ dfa.add_node(6, False)
 dfa.add_edge(0, 6, "=")
 dfa.add_node(7, False)
 dfa.add_edge(6, 7, "=")
-dfa.add_node(8, True)  # == and =
-dfa.add_edge(6, 8, "@")
-dfa.add_edge(7, 8, "@")
+dfa.add_node(8, True, "ASSIGNMENT")  # == and =
+dfa.add_edge(6, 8, legalchars.replace('=', ''))
+dfa.add_edge(7, 8, legalchars)
 
 # one line comments
 dfa.add_node(9, False)
 dfa.add_node(10, False)
 dfa.add_edge(0, 9, "/")
-dfa.add_edge(9, 0, "@")
+# dfa.add_edge(9, 0, legalchars.replace('/', ''))
 dfa.add_edge(9, 10, "/")
-dfa.add_edge(10, 0, "@")
+dfa.add_edge(10, 10, legalchars + ".")
 dfa.add_node(11, True, "COMMENT")  #comment
 dfa.add_edge(10, 11, "\n")
 
 # multiline comments
 dfa.add_node(12, False)
 dfa.add_edge(9, 12, "*")
-dfa.add_edge(12, 12, "@")
+dfa.add_edge(12, 12, legalchars.replace('*', ''))
+dfa.add_node(17, True, "UNCLOSED COMMENT")
+dfa.add_edge(12, 17, '~')
 dfa.add_node(13, False)
 dfa.add_edge(12, 13, "*")
-dfa.add_edge(13, 12, "@")
+dfa.add_edge(13, 12, legalchars.replace('/', ''))
 dfa.add_edge(13, 11, "/")
 
 #whitespace
 dfa.add_node(14, True, "WHITESPACE")
 dfa.add_edge(0, 14, "\n\r\f\t\v ")
 
-# def find_pattern(text, regex):
-#     matches = re.findall(regex, text)
-#     return matches
+#errors
+#unmatched comment and * symbol handling
+dfa.add_node(15, False)
+dfa.add_edge(0, 15, "*")
+dfa.add_node(16, True, "UNMATCHED COMMENT")
+dfa.add_edge(15, 16, '/')
+dfa.add_edge(15, 5, legalchars.replace('*', '').replace('/', ''))
 
 
 def get_next_token():
@@ -169,8 +202,32 @@ def run():
     line_number = 1
     current_state = 0
     for line in input_file:
+        dfa.tokens[line_number] = ""
+        dfa.lexical_errors[line_number] = ""
         for char in line:
-            current_state = dfa.get_next_state(0, char)
-            print(char, current_state)
+            current_state = dfa.get_next_state(current_state, char,
+                                               line_number)
+            # come back lookahead
+            if (current_state == 0):
+                current_state = dfa.get_next_state(current_state, char,
+                                                   line_number, True)
         line_number += 1
+
+    dfa.tokens[line_number] = ""
+    dfa.lexical_errors[line_number] = ""
+    current_state = dfa.get_next_state(current_state, '~', line_number)
     input_file.close()
+
+    file_writer = open("tokens.txt", "w")
+    for i in range(1, len(dfa.tokens) + 1):
+        if (dfa.tokens[i]):
+            file_writer.write(f"{i}.\t{dfa.tokens[i]}\n")
+    file_writer.close()
+
+    file_writer = open("lexical_errors.txt", "w")
+    for i in range(1, len(dfa.lexical_errors) + 1):
+        if (dfa.lexical_errors[i]):
+            file_writer.write(f"{i}.\t{repr(dfa.lexical_errors[i])}\n")
+    if (not dfa.lexical_errors):
+        file_writer.write("There is no lexical error.")
+    file_writer.close()
