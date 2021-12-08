@@ -1,3 +1,2 @@
 # C-minus-compiler
-Design of compilers course project
-written in python to interpret C-minus programs
+A one-pass compiler  for  a  simplified version  of  C  programming  language  (i.e.,called C-minus).
