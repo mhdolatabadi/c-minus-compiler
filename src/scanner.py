@@ -69,6 +69,7 @@ class DFA:
         self.lexical_errors = dict()
         self.last_token = ''
         self.identifiers = list()
+        self.line_number = 1
 
     def add_node(self,
                  node_id: int,
@@ -89,6 +90,8 @@ class DFA:
                        char: str,
                        line_number: int,
                        lookahead: bool = False):
+        if (not self.value):
+            self.line_number = line_number
         try:
             next_state = self.nodes_edges[current_state][char]
             token_type = self.token_type[next_state]
@@ -97,22 +100,36 @@ class DFA:
             if not lookahead:
                 #invalid input
                 self.lexical_errors[
-                    line_number] += f"({self.value}, Invalid Input) "
+                    self.line_number] += f"({self.value}, Invalid input) "
             self.value = ''
             return 0
+        if next_state == 0 and self.last_token not in [
+                "UNMATCHED COMMENT", "COMMENT"
+        ]:
+            self.lexical_errors[
+                self.line_number] += f"({self.value}, Invalid input) "
         if next_state in self.terminal_nodes:
             if self.last_token == "SYMBOL" and lookahead:
                 return 0
             if token_type in ["SYMBOL", "COMMENT", "UNMATCHED COMMENT"]:
                 self.value += char
-            if token_type in ["UNMATCHED COMMENT", "INVALID NUMBER"]:
-                self.lexical_errors[
-                    line_number] += f"({self.value}, {token_type.title()}) "
+            if token_type in [
+                    "UNMATCHED COMMENT", "INVALID NUMBER", "UNCLOSED COMMENT"
+            ]:
+                if token_type == "UNCLOSED COMMENT":
+                    self.lexical_errors[
+                        self.
+                        line_number] += f"({self.value[0:7]}..., {token_type.capitalize()}) "
+
+                else:
+                    self.lexical_errors[
+                        self.
+                        line_number] += f"({self.value}, {token_type.capitalize()}) "
+
             if token_type not in ignore_tokens:
                 self.value = self.value.replace(" ", "")
                 token_type = token_type_enhancer(self, token_type)
-                # bad action
-                self.tokens[line_number].append({
+                self.tokens[self.line_number].append({
                     'token_type': token_type,
                     'value': self.value
                 })
@@ -151,7 +168,7 @@ dfa.add_edge(3, 4, whitespace + symbol + '~')
 dfa.add_node(18, False)
 dfa.add_edge(3, 18, letter)
 dfa.add_node(19, True, 'INVALID NUMBER')
-dfa.add_edge(18, 19, legalchars.replace(letter, ''))
+dfa.add_edge(18, 19, legalchars)
 
 #symbols
 dfa.add_node(5, True, "SYMBOL")
@@ -179,7 +196,7 @@ dfa.add_edge(10, 11, "\n")
 # multiline comments
 dfa.add_node(12, False)
 dfa.add_edge(9, 12, "*")
-dfa.add_edge(12, 12, legalchars.replace('*', ''))
+dfa.add_edge(12, 12, legalchars.replace('*', '') + '@#%$')
 dfa.add_node(17, True, "UNCLOSED COMMENT")
 dfa.add_edge(12, 17, '~')
 dfa.add_node(13, False)
@@ -243,7 +260,7 @@ def run():
         if (dfa.lexical_errors[i]
                 and not dfa.lexical_errors[i].__contains__("~")):
             has_error = True
-            lexical_file.write(f"{i}.\t{repr(dfa.lexical_errors[i])}\n")
+            lexical_file.write(f"{i}.\t{dfa.lexical_errors[i]}\n")
     if (not dfa.lexical_errors or not has_error):
         lexical_file.write("There is no lexical error.")
     lexical_file.close()

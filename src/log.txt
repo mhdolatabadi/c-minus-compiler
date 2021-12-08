@@ -26,11 +26,12 @@ Files ./tokens.txt and ./tests/T01/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-7.	'(3d, Invalid Number) '												    |	7.	(3d, Invalid number) 																
-9.	'(cd!, Invalid Input) '												    |	9.	(cd!, Invalid input) 																
-11.	'(*/, Unmatched Comment) '											    |	11.	(*/, Unmatched comment) 																
-14.	'(@, Invalid Input) '												    |	14.	(@, Invalid input) 																
-															    >	16.	(/* comm..., Unclosed comment) 																
+7.	(3d, Invalid number) 													7.	(3d, Invalid number) 																
+9.	(cd!, Invalid input) 													9.	(cd!, Invalid input) 																
+11.	(*/, Unmatched comment) 												11.	(*/, Unmatched comment) 																
+14.	(@, Invalid input) 													14.	(@, Invalid input) 																
+16.	(/* comm..., Unclosed comment) 												16.	(/* comm..., Unclosed comment) 																
+Files ./lexical_errors.txt and ./tests/T01/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -174,12 +175,12 @@ Files ./tokens.txt and ./tests/T04/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-3.	'(23ap, Invalid Input) '											    |	3.	(23a, Invalid number) 																
-6.	'(=#, Invalid Input) '												    |	6.	(=#, Invalid input) 																
-10.	'(2mi, Invalid Input) '												    |	10.	(2m, Invalid number) 																
-11.	'(#, Invalid Input) '												    |	11.	(#, Invalid input) 																
-12.	'(!, Invalid Input) '												    |	12.	(!, Invalid input) 																
-17.	'(/* end of end of the code\n// hmmmmmm\n@, Invalid Input) (#, Invalid Input) ($, Invalid Input) (#, Invalid Input  <
+3.	(23a, Invalid number) 													3.	(23a, Invalid number) 																
+6.	(=#, Invalid input) 													6.	(=#, Invalid input) 																
+10.	(2m, Invalid number) 													10.	(2m, Invalid number) 																
+11.	(#, Invalid input) 													11.	(#, Invalid input) 																
+12.	(!, Invalid input) 													12.	(!, Invalid input) 																
+Files ./lexical_errors.txt and ./tests/T04/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -262,8 +263,9 @@ Files ./tokens.txt and ./tests/T05/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-4.	'(re%, Invalid Input) '												    |	4.	(re%, Invalid input) 																
-8.	'(1sc, Invalid Input) '												    |	8.	(1s, Invalid number) 																
+4.	(re%, Invalid input) 													4.	(re%, Invalid input) 																
+8.	(1s, Invalid number) 													8.	(1s, Invalid number) 																
+Files ./lexical_errors.txt and ./tests/T05/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -312,8 +314,9 @@ Files ./tokens.txt and ./tests/T06/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-4.	'(*/, Unmatched Comment) '											    |	4.	(*/, Unmatched comment) 																
-															    >	13.	(/*this ..., Unclosed comment) 																
+4.	(*/, Unmatched comment) 												4.	(*/, Unmatched comment) 																
+13.	(/*this ..., Unclosed comment) 												13.	(/*this ..., Unclosed comment) 																
+Files ./lexical_errors.txt and ./tests/T06/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -360,9 +363,10 @@ Files ./tokens.txt and ./tests/T07/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-2.	'(*/, Unmatched Comment) '											    |	2.	(*/, Unmatched comment) 																
-															    >	13.	(/, Invalid input) 																
-															    >	16.	(/*void ..., Unclosed comment) 																
+2.	(*/, Unmatched comment) 												2.	(*/, Unmatched comment) 																
+13.	(/, Invalid input) 													13.	(/, Invalid input) 																
+16.	(/*void ..., Unclosed comment) 												16.	(/*void ..., Unclosed comment) 																
+Files ./lexical_errors.txt and ./tests/T07/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -407,9 +411,10 @@ Files ./tokens.txt and ./tests/T08/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-4.	'(1gh, Invalid Input) '												    |	4.	(1g, Invalid number) 																
-7.	'(hell$, Invalid Input) (ooo&, Invalid Input) '									    |	7.	(hell$, Invalid input) (ooo&, Invalid input) 																
-8.	'(!, Invalid Input) '												    |	8.	(!, Invalid input) 																
+4.	(1g, Invalid number) 													4.	(1g, Invalid number) 																
+7.	(hell$, Invalid input) (ooo&, Invalid input) 										7.	(hell$, Invalid input) (ooo&, Invalid input) 																
+8.	(!, Invalid input) 													8.	(!, Invalid input) 																
+Files ./lexical_errors.txt and ./tests/T08/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
@@ -467,14 +472,16 @@ Files ./symbol_table.txt and ./tests/T08/symbol_table.txt are identical
 31.	(ID, output) (SYMBOL, () (ID, f) (SYMBOL, () (NUM, 40) (SYMBOL, ,) (ID, result) (SYMBOL, )) (SYMBOL, )) (SYMBOL, ;	31.	(ID, output) (SYMBOL, () (ID, f) (SYMBOL, () (NUM, 40) (SYMBOL, ,) (ID, result) (SYMBOL, )) (SYMBOL, )) (SYMBOL, ;																
 32.	(ID, output) (SYMBOL, () (ID, count) (SYMBOL, )) (SYMBOL, ;) 								32.	(ID, output) (SYMBOL, () (ID, count) (SYMBOL, )) (SYMBOL, ;) 																
 33.	(SYMBOL, }) 														33.	(SYMBOL, }) 																
-35.	(NUM, 1941) 													    |	34.	(NUM, 1941) 																
+34.	(NUM, 1941) 														34.	(NUM, 1941) 																
+Files ./tokens.txt and ./tests/T09/tokens.txt are identical
 
 
               *** lexical_errors.txt diffrences ***
-5.	'(#, Invalid Input) '												    |	5.	(#, Invalid input) 																
-6.	'(=#, Invalid Input) (#, Invalid Input) '									    |	6.	(=#, Invalid input) (#, Invalid input) 																
-23.	'(void$, Invalid Input) '											    |	23.	(void$, Invalid input) 																
-28.	'(*#, Invalid Input) (#, Invalid Input) '									    |	28.	(*#, Invalid input) (#, Invalid input) 																
+5.	(#, Invalid input) 													5.	(#, Invalid input) 																
+6.	(=#, Invalid input) (#, Invalid input) 											6.	(=#, Invalid input) (#, Invalid input) 																
+23.	(void$, Invalid input) 													23.	(void$, Invalid input) 																
+28.	(*#, Invalid input) (#, Invalid input) 											28.	(*#, Invalid input) (#, Invalid input) 																
+Files ./lexical_errors.txt and ./tests/T09/lexical_errors.txt are identical
 
 
               *** symbol_table.txt diffrences ***
