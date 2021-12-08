@@ -35,7 +35,7 @@
 # This is scanner module of compiler.
 import re
 
-KEYWORD = r"if|else|void|int|repeat|break|until|return"
+KEYWORD = r"if|else|void|int|repeat|break|until|return|endif"
 SYMBOL = r" ; | : | , | \[ | \] | \( | \) | { | } | \+ | - | \* | = | < | == "
 NUMBER = r"[0-9]+"
 IDENTIFIER = r"[A-Za-z][A-Za-z0-9]*"
@@ -268,7 +268,8 @@ def run():
     #symbol table
     symbol_file = open("symbol_table.txt", "w")
     keywords = [
-        'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return'
+        'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return',
+        'endif'
     ]
     # add keywords
     for i in range(1, len(keywords) + 1):
