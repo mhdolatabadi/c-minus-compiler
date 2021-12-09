@@ -1,83 +1,24 @@
 class TransitionDiagram:
     def __init__(self):
-        self.terminal_nodes = set()
+        self.nodes_edges = dict()
 
     def add_node(self,
                  node_id: int,
                  is_starter: bool = True,
                  is_terminal: bool = False):
-        pass
+        if is_terminal:
+            self.terminal_nodes.add(node_id)
 
-    def add_edge(self, from_node: int, to_node: int, by: str):
-        pass
+    def add_edge(self, from_node: int, to_node: int, by):
+        self.nodes_edges[from_node][by] = to_node
 
+    def traversal(self, from_node, by):
+        try:
+            next_state = self.nodes_edges[from_node][by]
+        except KeyError:
+            print("error")
+        return next_state
 
-# Addop = TransitionDiagram()
-# Addop.add_node(0)
-# Addop.add_node(1, False, True)
-# Addop.add_edge(0, 1, '+')
-# Addop.add_edge(0, 1, '-')
-
-# Relop = TransitionDiagram()
-# Relop.add_node(0)
-# Relop.add_node(1, False, True)
-# Relop.add_edge(0, 1, '<')
-# Relop.add_edge(0, 1, '==')
-
-# Paramprime = TransitionDiagram()
-# Paramprime.add_node(0)
-# Paramprime.add_node(1, False)
-# Paramprime.add_node(2, False, True)
-# Paramprime.add_edge(0, 1, '[')
-# Paramprime.add_edge(1, 2, ']')
-# Paramprime.add_edge(0, 2, 'EPSILON')
-
-# Typespecifier = TransitionDiagram()
-# Typespecifier.add_node(0)
-# Typespecifier.add_node(1, False, True)
-# Typespecifier.add_edge(0, 1, 'int')
-# Typespecifier.add_edge(0, 1, 'void')
-
-# Vardeclarationprime = TransitionDiagram()
-# Vardeclarationprime.add_node(0)
-# Vardeclarationprime.add_node(1, False)
-# Vardeclarationprime.add_node(2, False)
-# Vardeclarationprime.add_node(3, False)
-# Vardeclarationprime.add_node(4, False, True)
-# Vardeclarationprime.add_edge(0, 4, ';')
-# Vardeclarationprime.add_edge(0, 1, '[')
-# Vardeclarationprime.add_edge(1, 2, 'NUM')
-# Vardeclarationprime.add_edge(2, 3, ']')
-# Vardeclarationprime.add_edge(3, 4, ';')
-
-# Declarationinitial = TransitionDiagram()
-# Declarationinitial.add_node(0)
-# Declarationinitial.add_node(1, False)
-# Declarationinitial.add_node(2, False, True)
-# Declarationinitial.add_edge(0, 1, Typespecifier)
-# Declarationinitial.add_edge(1, 2, 'ID')
-
-# Params = TransitionDiagram()
-# Params.add_node(0)
-# Params.add_node(1, False)
-# Params.add_node(2, False)
-# Params.add_node(3, False)
-# Params.add_node(4, False, True)
-# Params.add_edge(0, 1, 'int')
-# Params.add_edge(1, 2, 'ID')
-# Params.add_edge(2, 3, Paramprime)
-# Params.add_edge(3, 4, Paramlist)
-# Params.add_edge(0, 4, 'void')
-
-# Paramlist = TransitionDiagram()
-# Paramlist.add_node(0)
-# Paramlist.add_node(1, False)
-# Paramlist.add_node(2, False)
-# Paramlist.add_node(3, False, True)
-# Paramlist.add_edge(0, 1, ',')
-# Paramlist.add_edge(1, 2, Params)
-# Paramlist.add_edge(2, 3, Paramlist)
-# Paramlist.add_edge(0, 3, 'EPSILON')
 
 Program = TransitionDiagram()
 Program.add_node(0)
@@ -289,7 +230,6 @@ B.add_edge(2, 3, ']')
 B.add_edge(3, 5, H)
 B.add_edge(0, 5, Simpleexpressionprime)
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 H = TransitionDiagram()
 H.add_node(0)
 H.add_node(1, False)
@@ -390,18 +330,18 @@ G.add_edge(1, 2, Factor)
 G.add_edge(2, 3, G)
 G.add_edge(0, 3, 'EPSILON')
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 Factor = TransitionDiagram()
 Factor.add_node(0)
 Factor.add_node(1, False)
 Factor.add_node(2, False)
-Factor.add_node(3, False, True)
+Factor.add_node(3, False)
+Factor.add_node(4, False, True)
 Factor.add_edge(0, 1, '(')
 Factor.add_edge(1, 2, Expression)
-Factor.add_edge(2, 3, ')')
-Factor.add_edge(0, 1, 'ID')
-Factor.add_edge(1, 2, Varcallprime)
-Factor.add_edge(0, 1, 'NUM')
+Factor.add_edge(2, 4, ')')
+Factor.add_edge(0, 3, 'ID')
+Factor.add_edge(3, 4, Varcallprime)
+Factor.add_edge(0, 4, 'NUM')
 
 Varcallprime = TransitionDiagram()
 Varcallprime.add_node(0)

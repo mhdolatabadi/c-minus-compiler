@@ -218,7 +218,13 @@ dfa.add_edge(15, 5, legalchars.replace('*', '').replace('/', ''))
 
 
 def get_next_token():
-    pass
+    tokens = []
+    input_file = open("token.txt")
+    for line in input_file:
+        line_token = line.split(" ")
+        tokens.add(line_token)
+    print(tokens)
+    input_file.close()
 
 
 def run():
