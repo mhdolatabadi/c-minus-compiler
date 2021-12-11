@@ -1,4 +1,17 @@
 import scanner
+from anytree import Node, RenderTree
+
+
+def write_traversal(text):
+    file = open("traversal.txt", "a")
+    file.write(text)
+    file.close()
+
+
+def write_parse_tree(text):
+    file = open("parse_tree.txt", "a")
+    file.write(text)
+    file.close()
 
 
 class TransitionDiagram:
@@ -8,6 +21,13 @@ class TransitionDiagram:
         self.terminal_node = 0
         self.name = name
         self.depth = -1
+        self.node_depth = -1
+        self.node = []
+
+    def print_tree(self):
+        for pre, fill, node in RenderTree(self.node[0]):
+            write_parse_tree("%s%s" % (pre, node.name))
+            write_parse_tree("\n")
 
     def add_node(self,
                  node_id: int,
@@ -20,101 +40,97 @@ class TransitionDiagram:
     def add_edge(self, from_node: int, to_node: int, by):
         self.nodes_edges[from_node][by] = to_node
 
-    def traversal(self, char: str, path):
+    def traversal(self, char: str, path, parent_node):
+        node = 0
         self.depth += 1
+        self.node_depth += 1
         try:
             self.current_node[self.depth]
+            self.node[self.node_depth]
         except IndexError:
             self.current_node.append(0)
-        file = open("traversal.txt", "a")
-        file.write(
-            f"{char['value']} {self.name} {self.current_node[self.depth]}\n")
-        file.close()
-        print(self.name, self.current_node[self.depth])
-        k = self.current_node[self.depth]
-        # file = open("traversal.txt", "a")
-        # file.write(f"{self.nodes_edges}\n")
-        # file.close()
-        for i in range(k, len(self.nodes_edges)):
-            edge = self.nodes_edges[i]
-            for j in edge:
-                if j == char['value']:
+            self.node.append(Node(self.name))
+        starting_rule = self.current_node[self.depth]
+        edge = self.nodes_edges[starting_rule]
+        for j in edge:
+            if j == char['value']:
+                if char['value'] != '$':
+                    path.append(f"({char['token_type']}, {char['value']})")
+                else:
+                    path.append(char['value'])
+                path.append(self.name)
+                if self.name != 'Program' and not self.node[
+                        self.node_depth].parent:
+                    self.node[self.node_depth].parent = parent_node
+                if edge[j] == self.terminal_node:
+                    if char['value'] != '$':
+                        node = Node(f"({char['token_type']}, {char['value']})")
+                    else:
+                        node = Node(char['value'])
+                    node.parent = self.node[self.node_depth]
+                    self.current_node[self.depth] = 0
+                    self.depth -= 1
+                    return True
+                else:
+                    node = Node(f"({char['token_type']}, {char['value']})")
+                    node.parent = self.node[self.node_depth]
+                    self.current_node[self.depth] = edge[j]
+                    self.depth -= 1
+                    self.node_depth -= 1
+                    return 14
+            if type(j) == TransitionDiagram:
+                result = j.traversal(char, path, self.node[self.node_depth])
+                if (result):
+                    if self.name != 'Program' and not (
+                            self.node[self.node_depth].parent):
+                        self.node[self.node_depth].parent = parent_node
+                    path.append(self.name)
+                    if (result == 14):
+                        self.depth -= 1
+                        self.node_depth -= 1
+                        return 14
+                    else:
+                        if edge[j] == self.terminal_node:
+                            self.current_node[self.depth] = 0
+                            self.depth -= 1
+                            return True
+                        else:
+                            self.current_node[self.depth] = edge[j]
+                            self.depth -= 1
+                            self.node_depth -= 1
+                            return 14
+
+            if j in ['NUM', 'ID']:
+                if (char['token_type'] == j):
                     path.append(f"({char['token_type']}, {char['value']})")
                     path.append(self.name)
+                    if self.name != 'Program' and not self.node[
+                            self.node_depth].parent:
+                        self.node[self.node_depth].parent = parent_node
+                    node = Node(f"({char['token_type']}, {char['value']})")
+                    print(f"({char['token_type']}, {char['value']})")
+                    node.parent = self.node[self.node_depth]
                     if edge[j] == self.terminal_node:
-                        file = open("traversal.txt", "a")
-                        file.write(f"this is fucking {char['value']}\n")
-                        file.close()
                         self.current_node[self.depth] = 0
                         self.depth -= 1
                         return True
                     else:
-                        file = open("traversal.txt", "a")
-                        file.write(f"this is fucking {char['value']}\n")
-                        file.close()
-                        self.current_node[self.depth] += 1
+                        self.current_node[self.depth] = edge[j]
                         self.depth -= 1
+                        self.node_depth -= 1
                         return 14
-                if type(j) == TransitionDiagram:
-                    result = j.traversal(char, path)
-                    if (result == 14):
-                        path.append(self.name)
-                        self.depth -= 1
-                        return 14
-                    elif (result):
-                        path.append(self.name)
-                        if edge[j] == self.terminal_node:
-                            self.current_node[self.depth] = 0
-                            self.depth -= 1
-                            return True
-                        else:
-                            self.current_node[self.depth] += 1
-                            file = open("traversal.txt", "a")
-                            file.write(
-                                f"{self.name} {self.depth} increase current node to {self.current_node[self.depth]}\n"
-                            )
-                            file.close()
-                            self.depth -= 1
-                            return 14
-
-                if j in ['NUM', 'ID']:
-                    if (char['token_type'] == j):
-                        path.append(f"({char['token_type']}, {char['value']})")
-                        path.append(self.name)
-                        file = open("traversal.txt", "a")
-                        file.write(f"this is fucking {char['value']}\n")
-                        file.close()
-                        if edge[j] == self.terminal_node:
-                            self.current_node[self.depth] = 0
-                            self.depth -= 1
-                            return True
-                        else:
-                            self.current_node[self.depth] += 1
-                            self.depth -= 1
-                            return 14
-                if j == 'EPSILON':
-                    file = open("traversal.txt", "a")
-                    file.write(f"this is fucking epsilon\n")
-                    file.close()
-                    path.append('epsilon')
-                    if edge[j] == self.terminal_node:
-                        self.current_node[self.depth] = 0
-                        self.depth -= 1
-                        return True
-
-                file = open("traversal.txt", "a")
-                file.write(
-                    f"{self.name} {j if type(j) != TransitionDiagram else j.name} {self.current_node[self.depth]} break\n"
-                )
-                file.close()
-                # self.current_node[self.depth] += 1
-            try:
-                if (self.nodes_edges[i][j] != self.terminal_node):
-                    break
-            except KeyError:
-                print("+++++++++++++++++", self.nodes_edges[i])
-
+            if j == 'EPSILON':
+                path.append('epsilon')
+                if edge[j] == self.terminal_node:
+                    node = Node('epsilon')
+                    node.parent = self.node[self.node_depth]
+                    if not self.node[self.node_depth].parent:
+                        self.node[self.node_depth].parent = parent_node
+                    self.current_node[self.depth] = 0
+                    self.depth -= 1
+                    return 'epsilon'
         self.depth -= 1
+        self.node_depth -= 1
         return False
 
 
@@ -266,10 +282,10 @@ Statementlist.add_edge(0, 2, 'EPSILON')
 
 Statement.add_node(0)
 Statement.add_node(1, False, True)
-Statement.add_edge(0, 1, Expressionstmt)
-Statement.add_edge(0, 1, Compoundstmt)
-Statement.add_edge(0, 1, Selectionstmt)
 Statement.add_edge(0, 1, Iterationstmt)
+Statement.add_edge(0, 1, Compoundstmt)
+Statement.add_edge(0, 1, Expressionstmt)
+Statement.add_edge(0, 1, Selectionstmt)
 Statement.add_edge(0, 1, Returnstmt)
 
 Expressionstmt.add_node(0)
@@ -523,14 +539,16 @@ Program.add_edge(1, 2, '$')
 
 def run():
     index = 0
+    program_node = Node('Program')
     while scanner.get_next_token(index) != "END":
         by = scanner.get_next_token(index)
         path = []
-        print(by['value'])
-        Program.traversal(by, path)
+        Program.traversal(by, path, Program.node)
         file = open("pathes.txt", "a")
         file.write(f"{path}\n")
         file.close()
-        print(path)
+        # print(path)
         if (path[0] != 'epsilon'):
             index += 1
+
+    Program.print_tree()

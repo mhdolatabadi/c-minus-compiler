@@ -1,12 +1,19 @@
 import scanner
 
 
+def write_traversal(text):
+    file = open("traversal.txt", "a")
+    file.write(text)
+    file.close()
+
+
 class TransitionDiagram:
     def __init__(self, name):
         self.nodes_edges = dict()
-        self.current_node = 0
+        self.current_node = []
         self.terminal_node = 0
         self.name = name
+        self.depth = -1
 
     def add_node(self,
                  node_id: int,
@@ -20,60 +27,89 @@ class TransitionDiagram:
         self.nodes_edges[from_node][by] = to_node
 
     def traversal(self, char: str, path):
-        file = open("traversal.txt", "a")
-        file.write(f"{char['value']} {self.name} {self.current_node}\n")
-        file.close()
-        print(self.name, self.current_node)
-        for i in range(self.current_node, len(self.nodes_edges)):
+        self.depth += 1
+        try:
+            self.current_node[self.depth]
+        except IndexError:
+            self.current_node.append(0)
+        write_traversal(
+            f"{char['value']} {self.name} {self.current_node[self.depth]}\n")
+        print(self.name, self.current_node[self.depth])
+        starting_rule = self.current_node[self.depth]
+        for i in range(starting_rule, len(self.nodes_edges)):
             edge = self.nodes_edges[i]
             for j in edge:
                 if j == char['value']:
                     path.append(f"({char['token_type']}, {char['value']})")
                     path.append(self.name)
+                    write_traversal(
+                        f"{self.name} this is fucking {char['value']}\n")
                     if edge[j] == self.terminal_node:
-                        file = open("traversal.txt", "a")
-                        file.write(f"this is fuck {char['value']}\n")
-                        file.close()
-                        self.current_node = 0
+                        self.current_node[self.depth] = 0
+                        self.depth -= 1
                         return True
                     else:
+                        self.current_node[self.depth] = edge[j]
+                        self.depth -= 1
                         return 14
                 if type(j) == TransitionDiagram:
-                    temp = self.current_node
-                    self.current_node = 0
                     result = j.traversal(char, path)
-                    self.current_node = temp
                     if (result == 14):
                         path.append(self.name)
+                        self.depth -= 1
                         return 14
                     elif (result):
+                        if self.name == 'B':
+                            write_traversal(
+                                f"{self.nodes_edges} {self.terminal_node}\n")
                         path.append(self.name)
                         if edge[j] == self.terminal_node:
-                            self.current_node = 0
+                            self.current_node[self.depth] = 0
+                            self.depth -= 1
                             return True
                         else:
-                            self.current_node += 1
-                            file = open("traversal.txt", "a")
-                            file.write(f"{self.name} increase current node\n")
-                            file.close()
+                            write_traversal(f"{edge[j]}\n")
+                            self.current_node[self.depth] = edge[j]
+                            write_traversal(
+                                f"{self.name} {self.depth} increase current node to {self.current_node[self.depth]}\n"
+                            )
+                            self.depth -= 1
                             return 14
+                    else:
+                        self.current_node[self.depth] += 1
 
-                if j in ['EPSILON', 'NUM', 'ID']:
+                if j in ['NUM', 'ID']:
                     if (char['token_type'] == j):
                         path.append(f"({char['token_type']}, {char['value']})")
                         path.append(self.name)
+                        write_traversal(f"this is fucking {char['value']}\n")
                         if edge[j] == self.terminal_node:
-                            file = open("traversal.txt", "a")
-                            file.write(f"this is fuck {char['value']}\n")
-                            file.close()
-                            self.current_node = 0
+                            self.current_node[self.depth] = 0
+                            self.depth -= 1
                             return True
                         else:
+                            self.current_node[self.depth] += 1
+                            self.depth -= 1
                             return 14
-                file = open("traversal.txt", "a")
-                file.write(f"{self.name} {j} break\n")
-                file.close()
-                self.current_node += 1
+                if j == 'EPSILON':
+                    write_traversal(f"this is fucking epsilon\n")
+                    path.append('epsilon')
+                    if edge[j] == self.terminal_node:
+                        self.current_node[self.depth] = 0
+                        self.depth -= 1
+                        return True
+
+                write_traversal(
+                    f"{self.name} {j if type(j) != TransitionDiagram else j.name} {self.current_node[self.depth]} break\n"
+                )
+            try:
+                if (self.nodes_edges[i][j] != self.terminal_node):
+                    break
+            except KeyError:
+                print("+++++++++++++++++", self.nodes_edges[i])
+
+        self.depth -= 1
+        write_traversal(f"{self.name} returning false\n")
         return False
 
 
@@ -125,14 +161,14 @@ Program = TransitionDiagram("Program")
 
 Paramprime.add_node(0)
 Paramprime.add_node(1, False)
-Paramprime.add_node(2, False)
-Paramprime.add_node(3, False, True)
+Paramprime.add_node(2, False, True)
 Paramprime.add_edge(0, 1, '[')
 Paramprime.add_edge(1, 2, ']')
 Paramprime.add_edge(0, 2, 'EPSILON')
 
 Param.add_node(0)
-Param.add_node(1, False, True)
+Param.add_node(1, False)
+Param.add_node(2, False, True)
 Param.add_edge(0, 1, Declarationinitial)
 Param.add_edge(1, 2, Paramprime)
 
@@ -162,7 +198,7 @@ Vardeclarationprime.add_node(2, False)
 Vardeclarationprime.add_node(3, False)
 Vardeclarationprime.add_node(4, False, True)
 Vardeclarationprime.add_edge(0, 4, ';')
-Vardeclarationprime.add_edge(0, 4, '[')
+Vardeclarationprime.add_edge(0, 1, '[')
 Vardeclarationprime.add_edge(1, 2, 'NUM')
 Vardeclarationprime.add_edge(2, 3, ']')
 Vardeclarationprime.add_edge(3, 4, ';')
@@ -201,16 +237,16 @@ Declaration.add_edge(1, 2, Declarationprime)
 
 Declarationlist.add_node(0)
 Declarationlist.add_node(1, False)
-Declarationlist.add_node(2, False)
-Declarationlist.add_node(3, False, True)
+Declarationlist.add_node(2, False, True)
 Declarationlist.add_edge(0, 1, Declaration)
 Declarationlist.add_edge(1, 2, Declarationlist)
-Declarationlist.add_edge(2, 3, 'EPSILON')
+Declarationlist.add_edge(0, 2, 'EPSILON')
 
 Compoundstmt.add_node(0)
 Compoundstmt.add_node(1, False)
 Compoundstmt.add_node(2, False)
-Compoundstmt.add_node(3, False, True)
+Compoundstmt.add_node(3, False)
+Compoundstmt.add_node(4, False, True)
 Compoundstmt.add_edge(0, 1, '{')
 Compoundstmt.add_edge(1, 2, Declarationlist)
 Compoundstmt.add_edge(2, 3, Statementlist)
@@ -225,10 +261,10 @@ Statementlist.add_edge(0, 2, 'EPSILON')
 
 Statement.add_node(0)
 Statement.add_node(1, False, True)
-Statement.add_edge(0, 1, Expressionstmt)
-Statement.add_edge(0, 1, Compoundstmt)
-Statement.add_edge(0, 1, Selectionstmt)
 Statement.add_edge(0, 1, Iterationstmt)
+Statement.add_edge(0, 1, Compoundstmt)
+Statement.add_edge(0, 1, Expressionstmt)
+Statement.add_edge(0, 1, Selectionstmt)
 Statement.add_edge(0, 1, Returnstmt)
 
 Expressionstmt.add_node(0)
@@ -238,14 +274,15 @@ Expressionstmt.add_edge(0, 1, Expression)
 Expressionstmt.add_edge(1, 2, ';')
 Expressionstmt.add_edge(0, 1, 'break')
 Expressionstmt.add_edge(1, 2, ';')
-Expressionstmt.add_edge(0, 1, ';')
+Expressionstmt.add_edge(0, 2, ';')
 
 Selectionstmt.add_node(0)
 Selectionstmt.add_node(1, False)
 Selectionstmt.add_node(2, False)
 Selectionstmt.add_node(3, False)
 Selectionstmt.add_node(4, False)
-Selectionstmt.add_node(5, False, True)
+Selectionstmt.add_node(5, False)
+Selectionstmt.add_node(6, False, True)
 Selectionstmt.add_edge(0, 1, 'if')
 Selectionstmt.add_edge(1, 2, '(')
 Selectionstmt.add_edge(2, 3, Expression)
@@ -277,7 +314,8 @@ Iterationstmt.add_edge(4, 5, Expression)
 Iterationstmt.add_edge(5, 6, ')')
 
 Returnstmt.add_node(0)
-Returnstmt.add_node(1, False, True)
+Returnstmt.add_node(1, False)
+Returnstmt.add_node(2, False, True)
 Returnstmt.add_edge(0, 1, 'return')
 Returnstmt.add_edge(1, 2, Returnstmtprime)
 
@@ -289,24 +327,25 @@ Returnstmtprime.add_edge(0, 1, Expression)
 Returnstmtprime.add_edge(1, 2, ';')
 
 Expression.add_node(0)
-Expression.add_node(1, False, True)
-Expression.add_edge(0, 1, Simpleexpressionzegond)
+Expression.add_node(1, False)
+Expression.add_node(2, False, True)
 Expression.add_edge(0, 1, 'ID')
 Expression.add_edge(1, 2, B)
+Expression.add_edge(0, 2, Simpleexpressionzegond)
 
 B.add_node(0)
 B.add_node(1, False)
 B.add_node(2, False)
 B.add_node(3, False)
-B.add_node(4, False)
-B.add_node(5, False, True)
-B.add_edge(0, 4, '=')
-B.add_edge(4, 5, Expression)
+B.add_node(4, False, True)
+B.add_node(5, False)
+B.add_edge(0, 5, '=')
+B.add_edge(5, 4, Expression)
 B.add_edge(0, 1, '[')
 B.add_edge(1, 2, Expression)
 B.add_edge(2, 3, ']')
-B.add_edge(3, 5, H)
-B.add_edge(0, 5, Simpleexpressionprime)
+B.add_edge(3, 4, H)
+B.add_edge(0, 4, Simpleexpressionprime)
 
 H.add_node(0)
 H.add_node(1, False)
@@ -320,12 +359,14 @@ H.add_edge(1, 2, D)
 H.add_edge(2, 4, C)
 
 Simpleexpressionzegond.add_node(0)
-Simpleexpressionzegond.add_node(1, False, True)
+Simpleexpressionzegond.add_node(1, False)
+Simpleexpressionzegond.add_node(2, False, True)
 Simpleexpressionzegond.add_edge(0, 1, Additiveexpressionzegond)
 Simpleexpressionzegond.add_edge(1, 2, C)
 
 Simpleexpressionprime.add_node(0)
-Simpleexpressionprime.add_node(1, False, True)
+Simpleexpressionprime.add_node(1, False)
+Simpleexpressionprime.add_node(2, False, True)
 Simpleexpressionprime.add_edge(0, 1, Additiveexpressionprime)
 Simpleexpressionprime.add_edge(1, 2, C)
 
@@ -342,17 +383,20 @@ Relop.add_edge(0, 1, '<')
 Relop.add_edge(0, 1, '==')
 
 Additiveexpression.add_node(0)
-Additiveexpression.add_node(1, False, True)
+Additiveexpression.add_node(1, False)
+Additiveexpression.add_node(2, False, True)
 Additiveexpression.add_edge(0, 1, Term)
 Additiveexpression.add_edge(1, 2, D)
 
 Additiveexpressionprime.add_node(0)
-Additiveexpressionprime.add_node(1, False, True)
+Additiveexpressionprime.add_node(1, False)
+Additiveexpressionprime.add_node(2, False, True)
 Additiveexpressionprime.add_edge(0, 1, Termprime)
 Additiveexpressionprime.add_edge(1, 2, D)
 
 Additiveexpressionzegond.add_node(0)
-Additiveexpressionzegond.add_node(1, False, True)
+Additiveexpressionzegond.add_node(1, False)
+Additiveexpressionzegond.add_node(2, False, True)
 Additiveexpressionzegond.add_edge(0, 1, Termzegond)
 Additiveexpressionzegond.add_edge(1, 2, D)
 
@@ -371,17 +415,20 @@ Addop.add_edge(0, 1, '+')
 Addop.add_edge(0, 1, '-')
 
 Term.add_node(0)
-Term.add_node(1, False, True)
+Term.add_node(1, False)
+Term.add_node(2, False, True)
 Term.add_edge(0, 1, Factor)
 Term.add_edge(1, 2, G)
 
 Termprime.add_node(0)
-Termprime.add_node(1, False, True)
+Termprime.add_node(1, False)
+Termprime.add_node(2, False, True)
 Termprime.add_edge(0, 1, Factorprime)
 Termprime.add_edge(1, 2, G)
 
 Termzegond.add_node(0)
-Termzegond.add_node(1, False, True)
+Termzegond.add_node(1, False)
+Termzegond.add_node(2, False, True)
 Termzegond.add_edge(0, 1, Factorzegond)
 Termzegond.add_edge(1, 2, G)
 
@@ -399,12 +446,12 @@ Factor.add_node(1, False)
 Factor.add_node(2, False)
 Factor.add_node(3, False)
 Factor.add_node(4, False, True)
+Factor.add_edge(0, 4, 'NUM')
 Factor.add_edge(0, 1, '(')
 Factor.add_edge(1, 2, Expression)
 Factor.add_edge(2, 4, ')')
 Factor.add_edge(0, 3, 'ID')
 Factor.add_edge(3, 4, Varcallprime)
-Factor.add_edge(0, 4, 'NUM')
 
 Varcallprime.add_node(0)
 Varcallprime.add_node(1, False)
@@ -448,7 +495,8 @@ Args.add_edge(0, 1, Arglist)
 Args.add_edge(0, 1, 'EPSILON')
 
 Arglist.add_node(0)
-Arglist.add_node(1, False, True)
+Arglist.add_node(1, False)
+Arglist.add_node(2, False, True)
 Arglist.add_edge(0, 1, Expression)
 Arglist.add_edge(1, 2, Arglistprime)
 
@@ -479,4 +527,5 @@ def run():
         file.write(f"{path}\n")
         file.close()
         print(path)
-        index += 1
+        if (path[0] != 'epsilon'):
+            index += 1

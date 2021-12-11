@@ -223,6 +223,7 @@ def get_next_token(index: int):
     for i in dfa.tokens:
         for j in dfa.tokens[i]:
             tokens.append(j)
+    tokens.append({'token_type': 'EOF', 'value': '$'})
     try:
         return tokens[index]
     except:
