@@ -8,5 +8,6 @@
 8.	return
 9.	endif
 10.	main
-11.	a
-12.	b
+11.	p
+12.	i
+13.	output

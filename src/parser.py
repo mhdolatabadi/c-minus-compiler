@@ -32,6 +32,9 @@ class TransitionDiagram:
         file.close()
         print(self.name, self.current_node[self.depth])
         k = self.current_node[self.depth]
+        # file = open("traversal.txt", "a")
+        # file.write(f"{self.nodes_edges}\n")
+        # file.close()
         for i in range(k, len(self.nodes_edges)):
             edge = self.nodes_edges[i]
             for j in edge:
@@ -40,15 +43,14 @@ class TransitionDiagram:
                     path.append(self.name)
                     if edge[j] == self.terminal_node:
                         file = open("traversal.txt", "a")
-                        file.write(f"this is fuck {char['value']}\n")
+                        file.write(f"this is fucking {char['value']}\n")
                         file.close()
                         self.current_node[self.depth] = 0
                         self.depth -= 1
-
                         return True
                     else:
                         file = open("traversal.txt", "a")
-                        file.write(f"{self.current_node}\n")
+                        file.write(f"this is fucking {char['value']}\n")
                         file.close()
                         self.current_node[self.depth] += 1
                         self.depth -= 1
@@ -64,7 +66,6 @@ class TransitionDiagram:
                         if edge[j] == self.terminal_node:
                             self.current_node[self.depth] = 0
                             self.depth -= 1
-
                             return True
                         else:
                             self.current_node[self.depth] += 1
@@ -74,30 +75,39 @@ class TransitionDiagram:
                             )
                             file.close()
                             self.depth -= 1
-
                             return 14
 
-                if j in ['EPSILON', 'NUM', 'ID']:
+                if j in ['NUM', 'ID']:
                     if (char['token_type'] == j):
                         path.append(f"({char['token_type']}, {char['value']})")
                         path.append(self.name)
+                        file = open("traversal.txt", "a")
+                        file.write(f"this is fucking {char['value']}\n")
+                        file.close()
                         if edge[j] == self.terminal_node:
-                            file = open("traversal.txt", "a")
-                            file.write(f"this is fuck {char['value']}\n")
-                            file.close()
                             self.current_node[self.depth] = 0
                             self.depth -= 1
-
                             return True
                         else:
+                            self.current_node[self.depth] += 1
                             self.depth -= 1
-
                             return 14
+                if j == 'EPSILON':
+                    file = open("traversal.txt", "a")
+                    file.write(f"this is fucking epsilon\n")
+                    file.close()
+                    path.append('epsilon')
+                    if edge[j] == self.terminal_node:
+                        self.current_node[self.depth] = 0
+                        self.depth -= 1
+                        return True
+
                 file = open("traversal.txt", "a")
                 file.write(
-                    f"{self.name} {j} {self.current_node[self.depth]} break\n")
+                    f"{self.name} {j if type(j) != TransitionDiagram else j.name} {self.current_node[self.depth]} break\n"
+                )
                 file.close()
-                self.current_node[self.depth] += 1
+                # self.current_node[self.depth] += 1
             try:
                 if (self.nodes_edges[i][j] != self.terminal_node):
                     break
@@ -324,23 +334,23 @@ Returnstmtprime.add_edge(1, 2, ';')
 Expression.add_node(0)
 Expression.add_node(1, False)
 Expression.add_node(2, False, True)
-Expression.add_edge(0, 2, Simpleexpressionzegond)
 Expression.add_edge(0, 1, 'ID')
 Expression.add_edge(1, 2, B)
+Expression.add_edge(0, 2, Simpleexpressionzegond)
 
 B.add_node(0)
 B.add_node(1, False)
 B.add_node(2, False)
 B.add_node(3, False)
-B.add_node(4, False)
-B.add_node(5, False, True)
-B.add_edge(0, 4, '=')
-B.add_edge(4, 5, Expression)
+B.add_node(4, False, True)
+B.add_node(5, False)
+B.add_edge(0, 5, '=')
+B.add_edge(5, 4, Expression)
 B.add_edge(0, 1, '[')
 B.add_edge(1, 2, Expression)
 B.add_edge(2, 3, ']')
-B.add_edge(3, 5, H)
-B.add_edge(0, 5, Simpleexpressionprime)
+B.add_edge(3, 4, H)
+B.add_edge(0, 4, Simpleexpressionprime)
 
 H.add_node(0)
 H.add_node(1, False)
@@ -441,12 +451,12 @@ Factor.add_node(1, False)
 Factor.add_node(2, False)
 Factor.add_node(3, False)
 Factor.add_node(4, False, True)
+Factor.add_edge(0, 4, 'NUM')
 Factor.add_edge(0, 1, '(')
 Factor.add_edge(1, 2, Expression)
 Factor.add_edge(2, 4, ')')
 Factor.add_edge(0, 3, 'ID')
 Factor.add_edge(3, 4, Varcallprime)
-Factor.add_edge(0, 4, 'NUM')
 
 Varcallprime.add_node(0)
 Varcallprime.add_node(1, False)
@@ -522,4 +532,5 @@ def run():
         file.write(f"{path}\n")
         file.close()
         print(path)
-        index += 1
+        if (path[0] != 'epsilon'):
+            index += 1
