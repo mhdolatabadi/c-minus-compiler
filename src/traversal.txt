@@ -2060,3 +2060,8 @@ Expression B
 True 1 Expression-stmt
 True 0 Compound-stmt
 True -1 Selection-stmt
+Declaration-initial Declaration
+Declaration Declaration-list
+Declaration-list Program
+Program God
+Declaration-prime Declaration

@@ -1,52 +1,45 @@
-Program 
-Declaration-list $ { break ; if while return switch ID + - ( NUM }
-Declaration int void $ { break ; if while return switch ID + - ( NUM }
-Declaration-initial ( ; [ , )
-Declaration-prime int void $ { break ; if while return switch ID + - ( NUM }
-Var-declaration-prime int void $ { break ; if while return switch ID + - ( NUM }
-Fun-declaration-prime int void $ { break ; if while return switch ID + - ( NUM }
-Type-specifier ID
+Program $
+Declarationlist $ { break ; if repeat return ID ( NUM }
+Declaration int void
+Declarationinitial ( ; [ , )
+Declarationprime int void
+Vardeclarationprime int void
+Fundeclarationprime int void
+Typespecifier ID
 Params )
-Param-list-void-abtar )
-Param-list )
+Paramlist )
 Param , )
-Param-prime , )
-Compound-stmt int void $ { break ; if while return switch ID + - ( NUM } else case default
-Statement-list } case default
-Statement { break ; if while return switch ID + - ( NUM } else case default
-Expression-stmt { break ; if while return switch ID + - ( NUM } else case default
-Selection-stmt { break ; if while return switch ID + - ( NUM } else case default
-Iteration-stmt { break ; if while return switch ID + - ( NUM } else case default
-Return-stmt { break ; if while return switch ID + - ( NUM } else case default
-Return-stmt-prime { break ; if while return switch ID + - ( NUM } else case default
-Switch-stmt { break ; if while return switch ID + - ( NUM } else case default
-Case-stmts default }
-Case-stmt case default }
-Default-stmt }
+Paramprime , )
+Compoundstmt int void { break ; if repeat return ID ( NUM } endif else until
+Statementlist }
+Statement { break ; if repeat return ID ( NUM } endif else until
+Expressionstmt { break ; if repeat return ID ( NUM } endif else until
+Selectionstmt { break ; if repeat return ID ( NUM } endif else until
+Elsestmt { break ; if repeat return ID ( NUM } endif else until
+Iterationstmt { break ; if repeat return ID( NUM } endif else until
+Returnstmt { break ; if repeat return ID ( NUM } endif else until
+Returnstmtprime { break ; if repeat return ID ( NUM } endif else until
 Expression ; ) ] ,
 B ; ) ] ,
 H ; ) ] ,
-Simple-expression-zegond ; ) ] ,
-Simple-expression-prime ; ) ] ,
+Simpleexpressionzegond ; ) ] ,
+Simpleexpressionprime ; ) ] ,
 C ; ) ] ,
-Relop + - ( ID NUM
-Additive-expression ; ) ] ,
-Additive-expression-prime < == ; ) ] ,
-Additive-expression-zegond < == ; ) ] ,
+Relop ( ID NUM
+Additiveexpression ; ) ] ,
+Additiveexpressionprime < == ; ) ] ,
+Additiveexpressionzegond < == ; ) ] ,
 D < == ; ) ] ,
-Addop + - ( ID NUM
+Addop ( ID NUM
 Term + - ; ) < == ] ,
-Term-prime + - < == ; ) ] ,
-Term-zegond + - < == ; ) ] ,
+Termprime + - < == ; ) ] ,
+Termzegond + - < == ; ) ] ,
 G + - < == ; ) ] ,
-Signed-factor * + - ; ) < == ] ,
-Signed-factor-prime * + - < == ; ) ] ,
-Signed-factor-zegond * + - < == ; ) ] ,
 Factor * + - ; ) < == ] ,
-Var-call-prime * + - ; ) < == ] ,
-Var-prime * + - ; ) < == ] ,
-Factor-prime * + - < == ; ) ] ,
-Factor-zegond * + - < == ; ) ] ,
+Varcallprime * + - ; ) < == ] ,
+Varprime * + - ; ) < == ] ,
+Factorprime * + - < == ; ) ] ,
+Factorzegond * + - < == ; ) ] ,
 Args )
-Arg-list )
-Arg-list-prime )
+Arglist )
+Arglistprime )
