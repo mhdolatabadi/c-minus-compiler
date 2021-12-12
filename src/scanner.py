@@ -129,6 +129,8 @@ class DFA:
             if token_type not in ignore_tokens:
                 self.value = self.value.replace(" ", "")
                 token_type = token_type_enhancer(self, token_type)
+                if token_type == 'SYMBOL' and self.value[0] == '*':
+                    self.value = '*'
                 self.tokens[self.line_number].append({
                     'token_type': token_type,
                     'value': self.value
@@ -145,7 +147,7 @@ letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 digit = "0123456789"
 symbol = ";:,[({])}+-=<"
 whitespace = "\n\r\f\t\v "
-legalchars = letter + digit + whitespace + symbol + "/"
+legalchars = letter + digit + whitespace + symbol + "/" + "*"
 
 dfa = DFA()
 
@@ -162,7 +164,7 @@ dfa.add_node(3, False)
 dfa.add_edge(0, 3, digit)
 dfa.add_edge(3, 3, digit)
 dfa.add_node(4, True, "NUM")
-dfa.add_edge(3, 4, whitespace + symbol + '~')
+dfa.add_edge(3, 4, whitespace + symbol + '~' + '*')
 
 # invalid number
 dfa.add_node(18, False)
