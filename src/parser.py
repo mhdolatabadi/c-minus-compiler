@@ -193,6 +193,115 @@ Arglist = TransitionDiagram("Arg-list")
 Arglistprime = TransitionDiagram("Arg-list-prime")
 Program = TransitionDiagram("Program")
 
+Program = TransitionDiagram('Program', ['int', 'void'], ['$'])
+Declarationlist = TransitionDiagram(
+    'Declarationlist', ['int', 'void'],
+    ['$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}'])
+Declaration = TransitionDiagram('Declaration', ['int', 'void'],
+                                ['int', 'void'])
+Declarationinitial = TransitionDiagram('Declarationinitial', ['int', 'void'],
+                                       ['(', ';', '[', ',', ')'])
+Declarationprime = TransitionDiagram('Declarationprime', ['(', ';', '['],
+                                     ['int', 'void'])
+Vardeclarationprime = TransitionDiagram('Vardeclarationprime', [';', '['],
+                                        ['int', 'void'])
+Fundeclarationprime = TransitionDiagram('Fundeclarationprime', ['('],
+                                        ['int', 'void'])
+Typespecifier = TransitionDiagram('Typespecifier', ['int', 'void'], ['ID'])
+Params = TransitionDiagram('Params', ['int', 'void'], [')'])
+Paramlist = TransitionDiagram('Paramlist', [',', 'EPSILON'], [')'])
+Param = TransitionDiagram('Param', ['int', 'void'], [',', ')'])
+Paramprime = TransitionDiagram('Paramprime', ['[', 'EPSILON'], [',', ')'])
+Compoundstmt = TransitionDiagram('Compoundstmt', ['{'], [
+    'int', 'void', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
+    'NUM', '}', 'endif', 'else', 'until'
+])
+Statementlist = TransitionDiagram(
+    'Statementlist',
+    ['EPSILON', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM'],
+    ['}'])
+Statement = TransitionDiagram(
+    'Statement',
+    ['{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM'], [
+        '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
+        'endif', 'else', 'until'
+    ])
+Expressionstmt = TransitionDiagram(
+    'Expressionstmt', ['break', ';', 'ID', '(', 'NUM'], [
+        '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
+        'endif', 'else', 'until'
+    ])
+Selectionstmt = TransitionDiagram('Selectionstmt', ['if'], [
+    '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
+    'endif', 'else', 'until'
+])
+Elsestmt = TransitionDiagram('Elsestmt', ['endif', 'else'], [
+    '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
+    'endif', 'else', 'until'
+])
+Iterationstmt = TransitionDiagram('Iterationstmt', ['repeat'], [
+    '{', 'break', ';', 'if', 'repeat', 'return', 'ID(', 'NUM', '}', 'endif',
+    'else', 'until'
+])
+Returnstmt = TransitionDiagram('Returnstmt', ['return'], [
+    '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
+    'endif', 'else', 'until'
+])
+Returnstmtprime = TransitionDiagram(
+    'Returnstmtprime', [';', 'ID', '(', 'NUM'], [
+        '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
+        'endif', 'else', 'until'
+    ])
+Expression = TransitionDiagram('Expression', ['ID', '(', 'NUM'],
+                               [';', ')', ']', ','])
+B = TransitionDiagram('B',
+                      ['=', '[', '(', '*', '+', '-', '<', '==', 'EPSILON'],
+                      [';', ')', ']', ','])
+H = TransitionDiagram('H', ['=', '*', 'EPSILON', '+', '-', '<', '=='],
+                      [';', ')', ']', ','])
+Simpleexpressionzegond = TransitionDiagram('Simpleexpressionzegond',
+                                           ['(', 'NUM'], [';', ')', ']', ','])
+Simpleexpressionprime = TransitionDiagram(
+    'Simpleexpressionprime', ['(', '*', '+', '-', '<', '==', 'EPSILON'],
+    [';', ')', ']', ','])
+C = TransitionDiagram('C', ['EPSILON', '<', '=='], [';', ')', ']', ','])
+Relop = TransitionDiagram('Relop', ['<', '=='], ['(', 'ID', 'NUM'])
+Additiveexpression = TransitionDiagram('Additiveexpression',
+                                       ['(', 'ID', 'NUM'],
+                                       [';', ')', ']', ','])
+Additiveexpressionprime = TransitionDiagram('Additiveexpressionprime',
+                                            ['(', '*', '+', '-', 'EPSILON'],
+                                            ['<', '==', ';', ')', ']', ','])
+Additiveexpressionzegond = TransitionDiagram('Additiveexpressionzegond',
+                                             ['(', 'NUM'],
+                                             ['<', '==', ';', ')', ']', ','])
+D = TransitionDiagram('D', ['EPSILON', '+', '-'],
+                      ['<', '==', ';', ')', ']', ','])
+Addop = TransitionDiagram('Addop', ['+', '-'], ['(', 'ID', 'NUM'])
+Term = TransitionDiagram('Term', ['(', 'ID', 'NUM'],
+                         ['+', '-', ';', ')', '<', '==', ']', ','])
+Termprime = TransitionDiagram('Termprime', ['(', '*', 'EPSILON'],
+                              ['+', '-', '<', '==', ';', ')', ']', ','])
+Termzegond = TransitionDiagram('Termzegond', ['(', 'NUM'],
+                               ['+', '-', '<', '==', ';', ')', ']', ','])
+G = TransitionDiagram('G', ['*', 'EPSILON'],
+                      ['+', '-', '<', '==', ';', ')', ']', ','])
+Factor = TransitionDiagram('Factor', ['(', 'ID', 'NUM'],
+                           ['*', '+', '-', ';', ')', '<', '==', ']', ','])
+Varcallprime = TransitionDiagram(
+    'Varcallprime', ['(', '[', 'EPSILON'],
+    ['*', '+', '-', ';', ')', '<', '==', ']', ','])
+Varprime = TransitionDiagram('Varprime', ['[', 'EPSILON'],
+                             ['*', '+', '-', ';', ')', '<', '==', ']', ','])
+Factorprime = TransitionDiagram('Factorprime', ['(', 'EPSILON'],
+                                ['*', '+', '-', '<', '==', ';', ')', ']', ','])
+Factorzegond = TransitionDiagram(
+    'Factorzegond', ['(', 'NUM'],
+    ['*', '+', '-', '<', '==', ';', ')', ']', ','])
+Args = TransitionDiagram('Args', ['EPSILON', 'ID', '(', 'NUM'], [')'])
+Arglist = TransitionDiagram('Arglist', ['ID', '(', 'NUM'], [')'])
+Arglistprime = TransitionDiagram('Arglistprime', [',', 'EPSILON'], [')'])
+
 Paramprime.add_node(0)
 Paramprime.add_node(1, False)
 Paramprime.add_node(2, False, True)

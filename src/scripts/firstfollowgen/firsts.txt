@@ -1,0 +1,45 @@
+Program int void
+Declarationlist int void
+Declaration int void
+Declarationinitial int void
+Declarationprime ( ; [
+Vardeclarationprime ; [
+Fundeclarationprime (
+Typespecifier int void
+Params int void
+Paramlist , ε
+Param int void
+Paramprime [ ε
+Compoundstmt {
+Statementlist ε { break ; if repeat return ID ( NUM
+Statement { break ; if repeat return ID ( NUM
+Expressionstmt break ; ID ( NUM
+Selectionstmt if
+Elsestmt endif else
+Iterationstmt repeat
+Returnstmt return
+Returnstmtprime ; ID ( NUM
+Expression ID ( NUM
+B = [ ( * + - < == ε
+H = * ε + - < ==
+Simpleexpressionzegond ( NUM
+Simpleexpressionprime ( * + - < == ε
+C ε < ==
+Relop < ==
+Additiveexpression ( ID NUM
+Additiveexpressionprime ( * + - ε
+Additiveexpressionzegond ( NUM
+D ε + -
+Addop + -
+Term ( ID NUM
+Termprime ( * ε
+Termzegond ( NUM
+G * ε
+Factor ( ID NUM
+Varcallprime ( [ ε
+Varprime [ ε
+Factorprime ( ε
+Factorzegond ( NUM
+Args ε ID ( NUM
+Arglist ID ( NUM
+Arglistprime , ε
