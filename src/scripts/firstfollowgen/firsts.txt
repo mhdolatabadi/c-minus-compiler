@@ -1,5 +1,5 @@
 Program int void
-Declarationlist int void
+Declarationlist ε int void
 Declaration int void
 Declarationinitial int void
 Declarationprime ( ; [

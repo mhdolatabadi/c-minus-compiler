@@ -14,18 +14,28 @@ def write_parse_tree(text):
     file.close()
 
 
+index = None
+
+
+def next_token():
+    global char
+    global index
+    if index == None:
+        index = 0
+    char = scanner.get_next_token(index)
+    index += 1
+
+
 class TransitionDiagram:
-    def __init__(self, name):
+    def __init__(self, name, firsts, follows):
         self.nodes_edges = dict()
-        self.current_node = []
         self.terminal_node = 0
         self.name = name
-        self.depth = -1
-        self.node_depth = -1
-        self.node = []
+        self.firsts = firsts
+        self.follows = follows
 
-    def print_tree(self):
-        for pre, fill, node in RenderTree(self.node[0]):
+    def print_tree(self, root):
+        for pre, fill, node in RenderTree(root):
             write_parse_tree("%s%s" % (pre, node.name))
 
     def add_node(self,
@@ -39,185 +49,70 @@ class TransitionDiagram:
     def add_edge(self, from_node: int, to_node: int, by):
         self.nodes_edges[from_node][by] = to_node
 
-    def traversal(self, char: str, path, parent_node=Node('God')):
-        node = 0
-        self.depth += 1
-        self.node_depth += 1
-        try:
-            self.current_node[self.depth]
-            self.node[self.node_depth]
-        except IndexError:
-            self.current_node.append(0)
-            self.node.append(Node(self.name))
-        starting_rule = self.current_node[self.depth]
-        edge = self.nodes_edges[starting_rule]
-        for j in edge:
-            if type(j) == TransitionDiagram:
-                result = j.traversal(char, path, self.node[self.node_depth])
-                if (result):
-                    if not self.node[self.node_depth].parent:
-                        self.node[self.node_depth].parent = parent_node
-                        write_traversal(f'{self.name} {parent_node.name}\n')
-                    path.append(self.name)
-                    if (result == 14):
-                        self.depth -= 1
-                        self.node_depth -= 1
-                        return 14
-                    else:
-                        if edge[j] == self.terminal_node:
-                            self.current_node[self.depth] = 0
-                            self.depth -= 1
-                            self.node_depth -= 1
-                            if self.name == 'Statement':
-                                write_traversal(
-                                    f'True {self.node_depth} {j.name}\n')
-                            self.node.pop()
-                            return True
-                        else:
-                            self.current_node[self.depth] = edge[j]
-                            self.depth -= 1
-                            self.node_depth -= 1
-                            if self.name == 'Statement':
-                                write_traversal(
-                                    f'14 {self.node_depth} {j.name}\n')
-                            return 14
-            if j == char['value']:
-                leaf_name = f"({char['token_type']}, {char['value']})" if char[
-                    'value'] != '$' else char['value']
-                path.append(leaf_name)
-                path.append(self.name)
+    def traversal(self, parent_node=Node('God'), edge_number: int = 0):
+        value = char['token_type'] if char['token_type'] in [
+            'NUM', 'ID'
+        ] else char['value']
+        leaf_name = f"({char['token_type']}, {char['value']})" if value != '$' else value
+        edge = self.nodes_edges[edge_number]
+        node = Node(
+            self.name
+        ) if edge_number == 0 and self.name != 'Program' else parent_node
+        for rule in edge:
 
-                if edge[j] == self.terminal_node:
-                    node = Node(leaf_name)
-                    node.parent = self.node[self.node_depth]
-                    if not self.node[self.node_depth].parent:
-                        self.node[self.node_depth].parent = parent_node
-                    self.current_node[self.depth] = 0
-                    self.depth -= 1
-                    self.node_depth -= 1
-                    if self.name != 'Program':
-                        self.node.pop()
-                    return True
-                else:
-                    node = Node(leaf_name)
-                    node.parent = self.node[self.node_depth]
-                    if not self.node[self.node_depth].parent:
-                        self.node[self.node_depth].parent = parent_node
-                    self.current_node[self.depth] = edge[j]
-                    self.depth -= 1
-                    self.node_depth -= 1
-                    return 14
+            if type(rule) == TransitionDiagram and (value in rule.firsts or
+                                                    'EPSILON' in rule.firsts):
+                result = rule.traversal(node)
+                if edge[rule] != self.terminal_node:
+                    self.traversal(node, edge[rule])
+                if edge_number == 0 and self.name != 'Program':
+                    node.parent = parent_node
+                return True
+            elif rule == char['value'] or (rule in ['NUM', 'ID']
+                                           and char['token_type'] == rule):
+                leaf_node = Node(leaf_name)
+                leaf_node.parent = node
+                next_token()
+                if edge[rule] != self.terminal_node:
+                    self.traversal(node, edge[rule])
+                if edge_number == 0:
+                    node.parent = parent_node
+                return True
+            elif rule == 'EPSILON':
+                leaf_node = Node('epsilon')
+                leaf_node.parent = node
+                node.parent = parent_node
+                return True
 
-            if j in ['NUM', 'ID']:
-                if (char['token_type'] == j):
-                    path.append(f"({char['token_type']}, {char['value']})")
-                    path.append(self.name)
-                    node = Node(f"({char['token_type']}, {char['value']})")
-                    node.parent = self.node[self.node_depth]
-                    if not self.node[self.node_depth].parent:
-                        self.node[self.node_depth].parent = parent_node
-                    if edge[j] == self.terminal_node:
-                        self.current_node[self.depth] = 0
-                        self.depth -= 1
-                        self.node_depth -= 1
-                        self.node.pop()
-                        return True
-                    else:
-                        self.current_node[self.depth] = edge[j]
-                        self.depth -= 1
-                        self.node_depth -= 1
-                        return 14
-            if j == 'EPSILON':
-                path.append('epsilon')
-                path.append(self.name)
-                node = Node('epsilon')
-                node.parent = self.node[self.node_depth]
-                if not self.node[self.node_depth].parent:
-                    self.node[self.node_depth].parent = parent_node
-                if edge[j] == self.terminal_node:
-                    self.current_node[self.depth] = 0
-                    self.depth -= 1
-                    self.node_depth -= 1
-                    self.node.pop()
-                    return 'epsilon'
-        self.node_depth -= 1
-        self.depth -= 1
-        self.node.pop()
+        print('can not find anything in', self.name, 'with value', value,
+              'and edge:', edge)
 
-        return False
-
-
-Paramprime = TransitionDiagram("Param-prime")
-Param = TransitionDiagram("Param")
-Paramlist = TransitionDiagram("Param-list")
-Params = TransitionDiagram("Params")
-Vardeclarationprime = TransitionDiagram("Var-declaration-prime")
-Fundeclarationprime = TransitionDiagram("Fun-declaration-prime")
-Typespecifier = TransitionDiagram("Type-specifier")
-Declarationprime = TransitionDiagram("Declaration-prime")
-Declarationinitial = TransitionDiagram("Declaration-initial")
-Declaration = TransitionDiagram("Declaration")
-Declarationlist = TransitionDiagram("Declaration-list")
-Compoundstmt = TransitionDiagram("Compound-stmt")
-Statementlist = TransitionDiagram("Statement-list")
-Statement = TransitionDiagram("Statement")
-Expressionstmt = TransitionDiagram("Expression-stmt")
-Selectionstmt = TransitionDiagram("Selection-stmt")
-Elsestmt = TransitionDiagram("Else-stmt")
-Iterationstmt = TransitionDiagram("Iteration-stmt")
-Returnstmt = TransitionDiagram("Return-stmt")
-Returnstmtprime = TransitionDiagram("Return-stmt-prime")
-Expression = TransitionDiagram("Expression")
-B = TransitionDiagram("B")
-H = TransitionDiagram("H")
-Simpleexpressionzegond = TransitionDiagram("Simple-expression-zegond")
-Simpleexpressionprime = TransitionDiagram("Simple-expression-prime")
-C = TransitionDiagram("C")
-Relop = TransitionDiagram("Relop")
-Additiveexpression = TransitionDiagram("Additive-expression")
-Additiveexpressionprime = TransitionDiagram("Additive-expression-prime")
-Additiveexpressionzegond = TransitionDiagram("Additive-expression-zegond")
-D = TransitionDiagram("D")
-Addop = TransitionDiagram("Addop")
-Term = TransitionDiagram("Term")
-Termprime = TransitionDiagram("Term-prime")
-Termzegond = TransitionDiagram("Term-zegond")
-G = TransitionDiagram("G")
-Factor = TransitionDiagram("Factor")
-Varcallprime = TransitionDiagram("Var-call-prime")
-Varprime = TransitionDiagram("Var-prime")
-Factorprime = TransitionDiagram("Factor-prime")
-Factorzegond = TransitionDiagram("Factor-zegond")
-Args = TransitionDiagram("Args")
-Arglist = TransitionDiagram("Arg-list")
-Arglistprime = TransitionDiagram("Arg-list-prime")
-Program = TransitionDiagram("Program")
 
 Program = TransitionDiagram('Program', ['int', 'void'], ['$'])
 Declarationlist = TransitionDiagram(
-    'Declarationlist', ['int', 'void'],
+    'Declaration-list', ['int', 'void', 'EPSILON'],
     ['$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}'])
 Declaration = TransitionDiagram('Declaration', ['int', 'void'],
                                 ['int', 'void'])
-Declarationinitial = TransitionDiagram('Declarationinitial', ['int', 'void'],
+Declarationinitial = TransitionDiagram('Declaration-initial', ['int', 'void'],
                                        ['(', ';', '[', ',', ')'])
-Declarationprime = TransitionDiagram('Declarationprime', ['(', ';', '['],
+Declarationprime = TransitionDiagram('Declaration-prime', ['(', ';', '['],
                                      ['int', 'void'])
-Vardeclarationprime = TransitionDiagram('Vardeclarationprime', [';', '['],
+Vardeclarationprime = TransitionDiagram('Var-declaration-prime', [';', '['],
                                         ['int', 'void'])
-Fundeclarationprime = TransitionDiagram('Fundeclarationprime', ['('],
+Fundeclarationprime = TransitionDiagram('Fun-declaration-prime', ['('],
                                         ['int', 'void'])
-Typespecifier = TransitionDiagram('Typespecifier', ['int', 'void'], ['ID'])
+Typespecifier = TransitionDiagram('Type-specifier', ['int', 'void'], ['ID'])
 Params = TransitionDiagram('Params', ['int', 'void'], [')'])
-Paramlist = TransitionDiagram('Paramlist', [',', 'EPSILON'], [')'])
+Paramlist = TransitionDiagram('Param-list', [',', 'EPSILON'], [')'])
 Param = TransitionDiagram('Param', ['int', 'void'], [',', ')'])
-Paramprime = TransitionDiagram('Paramprime', ['[', 'EPSILON'], [',', ')'])
-Compoundstmt = TransitionDiagram('Compoundstmt', ['{'], [
+Paramprime = TransitionDiagram('Param-prime', ['[', 'EPSILON'], [',', ')'])
+Compoundstmt = TransitionDiagram('Compound-stmt', ['{'], [
     'int', 'void', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
     'NUM', '}', 'endif', 'else', 'until'
 ])
 Statementlist = TransitionDiagram(
-    'Statementlist',
+    'Statement-list',
     ['EPSILON', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM'],
     ['}'])
 Statement = TransitionDiagram(
@@ -227,28 +122,28 @@ Statement = TransitionDiagram(
         'endif', 'else', 'until'
     ])
 Expressionstmt = TransitionDiagram(
-    'Expressionstmt', ['break', ';', 'ID', '(', 'NUM'], [
+    'Expression-stmt', ['break', ';', 'ID', '(', 'NUM'], [
         '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
         'endif', 'else', 'until'
     ])
-Selectionstmt = TransitionDiagram('Selectionstmt', ['if'], [
+Selectionstmt = TransitionDiagram('Selection-stmt', ['if'], [
     '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
     'endif', 'else', 'until'
 ])
-Elsestmt = TransitionDiagram('Elsestmt', ['endif', 'else'], [
+Elsestmt = TransitionDiagram('Else-stmt', ['endif', 'else'], [
     '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
     'endif', 'else', 'until'
 ])
-Iterationstmt = TransitionDiagram('Iterationstmt', ['repeat'], [
+Iterationstmt = TransitionDiagram('Iteration-stmt', ['repeat'], [
     '{', 'break', ';', 'if', 'repeat', 'return', 'ID(', 'NUM', '}', 'endif',
     'else', 'until'
 ])
-Returnstmt = TransitionDiagram('Returnstmt', ['return'], [
+Returnstmt = TransitionDiagram('Return-stmt', ['return'], [
     '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
     'endif', 'else', 'until'
 ])
 Returnstmtprime = TransitionDiagram(
-    'Returnstmtprime', [';', 'ID', '(', 'NUM'], [
+    'Return-stmt-prime', [';', 'ID', '(', 'NUM'], [
         '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
         'endif', 'else', 'until'
     ])
@@ -259,20 +154,20 @@ B = TransitionDiagram('B',
                       [';', ')', ']', ','])
 H = TransitionDiagram('H', ['=', '*', 'EPSILON', '+', '-', '<', '=='],
                       [';', ')', ']', ','])
-Simpleexpressionzegond = TransitionDiagram('Simpleexpressionzegond',
+Simpleexpressionzegond = TransitionDiagram('Simple-expression-zegond',
                                            ['(', 'NUM'], [';', ')', ']', ','])
 Simpleexpressionprime = TransitionDiagram(
-    'Simpleexpressionprime', ['(', '*', '+', '-', '<', '==', 'EPSILON'],
+    'Simple-expression-prime', ['(', '*', '+', '-', '<', '==', 'EPSILON'],
     [';', ')', ']', ','])
 C = TransitionDiagram('C', ['EPSILON', '<', '=='], [';', ')', ']', ','])
 Relop = TransitionDiagram('Relop', ['<', '=='], ['(', 'ID', 'NUM'])
-Additiveexpression = TransitionDiagram('Additiveexpression',
+Additiveexpression = TransitionDiagram('Additive-expression',
                                        ['(', 'ID', 'NUM'],
                                        [';', ')', ']', ','])
-Additiveexpressionprime = TransitionDiagram('Additiveexpressionprime',
+Additiveexpressionprime = TransitionDiagram('Additive-expression-prime',
                                             ['(', '*', '+', '-', 'EPSILON'],
                                             ['<', '==', ';', ')', ']', ','])
-Additiveexpressionzegond = TransitionDiagram('Additiveexpressionzegond',
+Additiveexpressionzegond = TransitionDiagram('Additive-expression-zegond',
                                              ['(', 'NUM'],
                                              ['<', '==', ';', ')', ']', ','])
 D = TransitionDiagram('D', ['EPSILON', '+', '-'],
@@ -280,27 +175,27 @@ D = TransitionDiagram('D', ['EPSILON', '+', '-'],
 Addop = TransitionDiagram('Addop', ['+', '-'], ['(', 'ID', 'NUM'])
 Term = TransitionDiagram('Term', ['(', 'ID', 'NUM'],
                          ['+', '-', ';', ')', '<', '==', ']', ','])
-Termprime = TransitionDiagram('Termprime', ['(', '*', 'EPSILON'],
+Termprime = TransitionDiagram('Term-prime', ['(', '*', 'EPSILON'],
                               ['+', '-', '<', '==', ';', ')', ']', ','])
-Termzegond = TransitionDiagram('Termzegond', ['(', 'NUM'],
+Termzegond = TransitionDiagram('Term-zegond', ['(', 'NUM'],
                                ['+', '-', '<', '==', ';', ')', ']', ','])
 G = TransitionDiagram('G', ['*', 'EPSILON'],
                       ['+', '-', '<', '==', ';', ')', ']', ','])
 Factor = TransitionDiagram('Factor', ['(', 'ID', 'NUM'],
                            ['*', '+', '-', ';', ')', '<', '==', ']', ','])
 Varcallprime = TransitionDiagram(
-    'Varcallprime', ['(', '[', 'EPSILON'],
+    'Var-call-prime', ['(', '[', 'EPSILON'],
     ['*', '+', '-', ';', ')', '<', '==', ']', ','])
-Varprime = TransitionDiagram('Varprime', ['[', 'EPSILON'],
+Varprime = TransitionDiagram('Var-prime', ['[', 'EPSILON'],
                              ['*', '+', '-', ';', ')', '<', '==', ']', ','])
-Factorprime = TransitionDiagram('Factorprime', ['(', 'EPSILON'],
+Factorprime = TransitionDiagram('Factor-prime', ['(', 'EPSILON'],
                                 ['*', '+', '-', '<', '==', ';', ')', ']', ','])
 Factorzegond = TransitionDiagram(
-    'Factorzegond', ['(', 'NUM'],
+    'Factor-zegond', ['(', 'NUM'],
     ['*', '+', '-', '<', '==', ';', ')', ']', ','])
 Args = TransitionDiagram('Args', ['EPSILON', 'ID', '(', 'NUM'], [')'])
-Arglist = TransitionDiagram('Arglist', ['ID', '(', 'NUM'], [')'])
-Arglistprime = TransitionDiagram('Arglistprime', [',', 'EPSILON'], [')'])
+Arglist = TransitionDiagram('Arg-list', ['ID', '(', 'NUM'], [')'])
+Arglistprime = TransitionDiagram('Arg-list-prime', [',', 'EPSILON'], [')'])
 
 Paramprime.add_node(0)
 Paramprime.add_node(1, False)
@@ -587,14 +482,14 @@ G.add_edge(0, 3, 'EPSILON')
 Factor.add_node(0)
 Factor.add_node(1, False)
 Factor.add_node(2, False)
-Factor.add_node(3, False, True)
-Factor.add_node(4, False)
-Factor.add_edge(0, 3, 'NUM')
+Factor.add_node(3, False)
+Factor.add_node(4, False, True)
 Factor.add_edge(0, 1, '(')
 Factor.add_edge(1, 2, Expression)
-Factor.add_edge(2, 3, ')')
-Factor.add_edge(0, 4, 'ID')
-Factor.add_edge(4, 3, Varcallprime)
+Factor.add_edge(2, 4, ')')
+Factor.add_edge(0, 4, 'NUM')
+Factor.add_edge(0, 3, 'ID')
+Factor.add_edge(3, 4, Varcallprime)
 
 Varcallprime.add_node(0)
 Varcallprime.add_node(1, False)
@@ -660,20 +555,10 @@ Program.add_edge(1, 2, '$')
 
 
 def run():
-    index = 0
-    while scanner.get_next_token(index) != "END":
-        by = scanner.get_next_token(index)
-        print(by)
-        path = []
-        Program.traversal(by, path)
-        file = open("pathes.txt", "a")
-        file.write(f"{path}\n")
-        file.close()
-        # print(path)
-        if (path[0] != 'epsilon'):
-            index += 1
-
-    Program.print_tree()
+    next_token()
+    node = Node('Program')
+    Program.traversal(node)
+    Program.print_tree(node)
     syntax = open('syntax_errors.txt', 'w')
     syntax.write('There is no syntax error.')
     syntax.close()
