@@ -1,0 +1,30 @@
+int main()
+{
+    printf(252);
+    
+    int year;
+
+    printf(year);
+    scanf(year);
+
+    if (a % 2) {
+	print( * _ * )
+    }
+    // divisible by 4, 100 and 400
+    if (year > 400 == 0)
+        printf(year+1);
+    switch (a) {
+	case 5:
+		a = a*2;
+	case 7:
+		b = b*2;
+    }
+    while (a > 0) {
+	a = a - 1;
+    }
+    // by100nddntivisibleby400 */
+    repeat {
+	2 * 2 + * 2;
+    } until (a < 2)
+
+}

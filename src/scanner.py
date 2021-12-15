@@ -35,7 +35,7 @@
 # This is scanner module of compiler.
 import re
 
-KEYWORD = r"if|else|void|int|repeat|break|until|return"
+KEYWORD = r"if|else|void|int|repeat|break|until|return|endif"
 SYMBOL = r" ; | : | , | \[ | \] | \( | \) | { | } | \+ | - | \* | = | < | == "
 NUMBER = r"[0-9]+"
 IDENTIFIER = r"[A-Za-z][A-Za-z0-9]*"
@@ -129,6 +129,8 @@ class DFA:
             if token_type not in ignore_tokens:
                 self.value = self.value.replace(" ", "")
                 token_type = token_type_enhancer(self, token_type)
+                if token_type == 'SYMBOL' and self.value[0] == '*':
+                    self.value = '*'
                 self.tokens[self.line_number].append({
                     'token_type': token_type,
                     'value': self.value
@@ -145,7 +147,7 @@ letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 digit = "0123456789"
 symbol = ";:,[({])}+-=<"
 whitespace = "\n\r\f\t\v "
-legalchars = letter + digit + whitespace + symbol + "/"
+legalchars = letter + digit + whitespace + symbol + "/" + "*"
 
 dfa = DFA()
 
@@ -162,7 +164,7 @@ dfa.add_node(3, False)
 dfa.add_edge(0, 3, digit)
 dfa.add_edge(3, 3, digit)
 dfa.add_node(4, True, "NUM")
-dfa.add_edge(3, 4, whitespace + symbol + '~')
+dfa.add_edge(3, 4, whitespace + symbol + '~' + '*')
 
 # invalid number
 dfa.add_node(18, False)
@@ -216,9 +218,34 @@ dfa.add_node(16, True, "UNMATCHED COMMENT")
 dfa.add_edge(15, 16, '/')
 dfa.add_edge(15, 5, legalchars.replace('*', '').replace('/', ''))
 
+token_line_number = 0
 
-def get_next_token():
-    pass
+
+def get_line_number():
+    return token_line_number
+
+
+def get_next_token(index: int):
+    run()
+    tokens = []
+    global token_line_number
+    counter = 0
+    for i in dfa.tokens:
+        for j in dfa.tokens[i]:
+            tokens.append(j)
+            if counter == index:
+                token_line_number = i
+            counter += 1
+
+    tokens.append({'token_type': 'EOF', 'value': '$'})
+    with open('input.txt') as f:
+        count = sum(1 for _ in f)
+    try:
+        if tokens[index] == {'token_type': 'EOF', 'value': '$'}:
+            token_line_number = count
+        return tokens[index]
+    except:
+        return "END"
 
 
 def run():
@@ -268,7 +295,8 @@ def run():
     #symbol table
     symbol_file = open("symbol_table.txt", "w")
     keywords = [
-        'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return'
+        'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return',
+        'endif'
     ]
     # add keywords
     for i in range(1, len(keywords) + 1):

@@ -1,0 +1,7 @@
+4.	(*/, Unmatched comment) 
+5.	(=?, Invalid input) (*?, Invalid input) 
+6.	(khodahafe&, Invalid input) 
+7.	(/, Invalid input) 
+8.	(#, Invalid input) 
+17.	(53335x, Invalid number) 
+18.	(/*hello..., Unclosed comment) 

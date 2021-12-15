@@ -1,0 +1,45 @@
+Program $
+Declarationlist $ { break ; if repeat return ID ( NUM }
+Declaration int void
+Declarationinitial ( ; [ , )
+Declarationprime int void
+Vardeclarationprime int void
+Fundeclarationprime int void
+Typespecifier ID
+Params )
+Paramlist )
+Param , )
+Paramprime , )
+Compoundstmt int void { break ; if repeat return ID ( NUM } endif else until
+Statementlist }
+Statement { break ; if repeat return ID ( NUM } endif else until
+Expressionstmt { break ; if repeat return ID ( NUM } endif else until
+Selectionstmt { break ; if repeat return ID ( NUM } endif else until
+Elsestmt { break ; if repeat return ID ( NUM } endif else until
+Iterationstmt { break ; if repeat return ID( NUM } endif else until
+Returnstmt { break ; if repeat return ID ( NUM } endif else until
+Returnstmtprime { break ; if repeat return ID ( NUM } endif else until
+Expression ; ) ] ,
+B ; ) ] ,
+H ; ) ] ,
+Simpleexpressionzegond ; ) ] ,
+Simpleexpressionprime ; ) ] ,
+C ; ) ] ,
+Relop ( ID NUM
+Additiveexpression ; ) ] ,
+Additiveexpressionprime < == ; ) ] ,
+Additiveexpressionzegond < == ; ) ] ,
+D < == ; ) ] ,
+Addop ( ID NUM
+Term + - ; ) < == ] ,
+Termprime + - < == ; ) ] ,
+Termzegond + - < == ; ) ] ,
+G + - < == ; ) ] ,
+Factor * + - ; ) < == ] ,
+Varcallprime * + - ; ) < == ] ,
+Varprime * + - ; ) < == ] ,
+Factorprime * + - < == ; ) ] ,
+Factorzegond * + - < == ; ) ] ,
+Args )
+Arglist )
+Arglistprime )
