@@ -218,15 +218,31 @@ dfa.add_node(16, True, "UNMATCHED COMMENT")
 dfa.add_edge(15, 16, '/')
 dfa.add_edge(15, 5, legalchars.replace('*', '').replace('/', ''))
 
+token_line_number = 0
+
+
+def get_line_number():
+    return token_line_number
+
 
 def get_next_token(index: int):
     run()
     tokens = []
+    global token_line_number
+    counter = 0
     for i in dfa.tokens:
         for j in dfa.tokens[i]:
             tokens.append(j)
+            if counter == index:
+                token_line_number = i
+            counter += 1
+
     tokens.append({'token_type': 'EOF', 'value': '$'})
+    with open('input.txt') as f:
+        count = sum(1 for _ in f)
     try:
+        if tokens[index] == {'token_type': 'EOF', 'value': '$'}:
+            token_line_number = count
         return tokens[index]
     except:
         return "END"

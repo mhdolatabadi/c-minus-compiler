@@ -14,6 +14,12 @@ def write_parse_tree(text):
     file.close()
 
 
+def write_syntax_error(text):
+    syntax = open('syntax_errors.txt', 'a')
+    syntax.write(f'{text}\n')
+    syntax.close()
+
+
 index = None
 
 
@@ -23,10 +29,13 @@ def next_token():
     if index == None:
         index = 0
     char = scanner.get_next_token(index)
+    print(char)
     index += 1
 
 
 class TransitionDiagram:
+    EOF = False
+
     def __init__(self, name, firsts, follows):
         self.nodes_edges = dict()
         self.terminal_node = 0
@@ -49,7 +58,12 @@ class TransitionDiagram:
     def add_edge(self, from_node: int, to_node: int, by):
         self.nodes_edges[from_node][by] = to_node
 
-    def traversal(self, parent_node=Node('God'), edge_number: int = 0):
+    def traversal(self, errors, parent_node=Node('God'), edge_number: int = 0):
+        try:
+            if 'Unexpected' in errors[-1]:
+                return
+        except:
+            print('khob ke chi')
         value = char['token_type'] if char['token_type'] in [
             'NUM', 'ID'
         ] else char['value']
@@ -59,13 +73,13 @@ class TransitionDiagram:
             self.name
         ) if edge_number == 0 and self.name != 'Program' else parent_node
         for rule in edge:
-
-            if type(rule) == TransitionDiagram and (value in rule.firsts or
-                                                    'EPSILON' in rule.firsts):
-                result = rule.traversal(node)
+            if type(rule) == TransitionDiagram and (
+                    value in rule.firsts or
+                ('EPSILON' in rule.firsts and value in rule.follows)):
+                result = rule.traversal(errors, node)
                 if edge[rule] != self.terminal_node:
-                    self.traversal(node, edge[rule])
-                if edge_number == 0 and self.name != 'Program':
+                    self.traversal(errors, node, edge[rule])
+                if edge_number == 0 and self.name != 'Program' and result:
                     node.parent = parent_node
                 return True
             elif rule == char['value'] or (rule in ['NUM', 'ID']
@@ -74,7 +88,7 @@ class TransitionDiagram:
                 leaf_node.parent = node
                 next_token()
                 if edge[rule] != self.terminal_node:
-                    self.traversal(node, edge[rule])
+                    self.traversal(errors, node, edge[rule])
                 if edge_number == 0:
                     node.parent = parent_node
                 return True
@@ -83,25 +97,57 @@ class TransitionDiagram:
                 leaf_node.parent = node
                 node.parent = parent_node
                 return True
-
-        print('can not find anything in', self.name, 'with value', value,
-              'and edge:', edge)
+        for i in edge:
+            print(self.name, i, value, edge[i], self.terminal_node)
+            if value == '$' and type(i) == TransitionDiagram:
+                print('Unexpected EOF')
+                errors.append(
+                    f'#{scanner.get_line_number() + 1} : syntax error, Unexpected EOF'
+                )
+                return False
+            if i != value and type(i) != TransitionDiagram:
+                print('missing', i)
+                errors.append(
+                    f'#{scanner.get_line_number()} : syntax error, missing {i}'
+                )
+                return self.traversal(errors, parent_node, edge[i])
+            if value in i.follows or value in self.follows:
+                print('missing', i.name)
+                errors.append(
+                    f'#{scanner.get_line_number()} : syntax error, missing {i.name}'
+                )
+                return self.traversal(errors, parent_node, edge[i])
+            if value not in self.follows:
+                print('illegal', value)
+                errors.append(
+                    f'#{scanner.get_line_number()} : syntax error, illegal {value}'
+                )
+                next_token()
+                return self.traversal(errors, parent_node, edge_number)
 
 
 Program = TransitionDiagram('Program', ['int', 'void'], ['$'])
 Declarationlist = TransitionDiagram(
     'Declaration-list', ['int', 'void', 'EPSILON'],
     ['$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}'])
-Declaration = TransitionDiagram('Declaration', ['int', 'void'],
-                                ['int', 'void'])
+Declaration = TransitionDiagram('Declaration', ['int', 'void'], [
+    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
+    'NUM', '}'
+])
 Declarationinitial = TransitionDiagram('Declaration-initial', ['int', 'void'],
                                        ['(', ';', '[', ',', ')'])
-Declarationprime = TransitionDiagram('Declaration-prime', ['(', ';', '['],
-                                     ['int', 'void'])
-Vardeclarationprime = TransitionDiagram('Var-declaration-prime', [';', '['],
-                                        ['int', 'void'])
-Fundeclarationprime = TransitionDiagram('Fun-declaration-prime', ['('],
-                                        ['int', 'void'])
+Declarationprime = TransitionDiagram('Declaration-prime', ['(', ';', '['], [
+    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
+    'NUM', '}'
+])
+Vardeclarationprime = TransitionDiagram('Var-declaration-prime', [';', '['], [
+    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
+    'NUM', '}'
+])
+Fundeclarationprime = TransitionDiagram('Fun-declaration-prime', ['('], [
+    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
+    'NUM', '}'
+])
 Typespecifier = TransitionDiagram('Type-specifier', ['int', 'void'], ['ID'])
 Params = TransitionDiagram('Params', ['int', 'void'], [')'])
 Paramlist = TransitionDiagram('Param-list', [',', 'EPSILON'], [')'])
@@ -556,9 +602,14 @@ Program.add_edge(1, 2, '$')
 
 def run():
     next_token()
+    errors = list()
     node = Node('Program')
-    Program.traversal(node)
+    Program.traversal(errors, node)
     Program.print_tree(node)
-    syntax = open('syntax_errors.txt', 'w')
-    syntax.write('There is no syntax error.')
-    syntax.close()
+    if errors:
+        for error in errors:
+            write_syntax_error(error)
+            if 'Unexpected' in error:
+                break
+    else:
+        write_syntax_error('There is no syntax error.')
