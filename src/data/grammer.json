@@ -1,0 +1,111 @@
+{"Program" :{ "firsts":["int", "void"], "follows": ["$"]},
+"Declarationlist" :{ 
+    "firsts": ["int", "void", "EPSILON"],
+    "follows":["$", "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}"]},
+"Declaration" :{ "firsts":["int", "void"], "follows": [
+    "int", "void", "$", "{", "break", ";", "if", "repeat", "return", "ID", "(",
+    "NUM", "}"
+]},
+"Declarationinitial" :{ "firsts": ["int", "void"],
+  "follows":["(", ";", "[", ",", ")"]},
+"Declarationprime" :{ "firsts": ["(", ";", "["], "follows": [
+    "int", "void", "$", "{", "break", ";", "if", "repeat", "return", "ID", "(",
+    "NUM", "}"
+]},
+"Vardeclarationprime" :{ "firsts": [";", "["], "follows": [
+    "int", "void", "$", "{", "break", ";", "if", "repeat", "return", "ID", "(",
+    "NUM", "}"
+]},
+"Fundeclarationprime" :{ "firsts": ["("], "follows": [
+    "int", "void", "$", "{", "break", ";", "if", "repeat", "return", "ID", "(",
+    "NUM", "}"
+]},
+"Typespecifier" :{ "firsts": ["int", "void"], "follows": ["ID"]},
+"Params" :{ "firsts": ["int", "void"], "follows": [")"]},
+"Paramlist" :{ "firsts": [",", "EPSILON"], "follows": [")"]},
+"Param" :{ "firsts": ["int", "void"], "follows": [",", ")"]},
+"Paramprime" :{ "firsts": ["[", "EPSILON"], "follows": [",", ")"]},
+"Compoundstmt" :{ "firsts": ["{"], "follows": [
+    "int", "void", "{", "break", ";", "if", "repeat", "return", "ID", "(",
+    "NUM", "}", "endif", "else", "until"
+]},
+"Statementlist" :{ "firsts":
+    ["EPSILON", "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM"],
+    "follows":["}"]},
+"Statement" :{ "firsts":
+    ["{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM"], "follows": [
+        "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}",
+        "endif", "else", "until"
+    ]},
+"Expressionstmt" :{ "firsts": ["break", ";", "ID", "(", "NUM"], "follows": [
+        "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}",
+        "endif", "else", "until"
+    ]},
+"Selectionstmt" :{ "firsts": ["if"], "follows": [
+    "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}",
+    "endif", "else", "until"
+]},
+"Elsestmt" :{ "firsts": ["endif", "else"], "follows": [
+    "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}",
+    "endif", "else", "until"
+]},
+"Iterationstmt" :{ "firsts": ["repeat"], "follows": [
+    "{", "break", ";", "if", "repeat", "return", "ID(", "NUM", "}", "endif",
+    "else", "until"
+]},
+"Returnstmt" :{ "firsts": ["return"], "follows": [
+    "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}",
+    "endif", "else", "until"
+]},
+"Returnstmtprime" :{
+    "firsts": [";", "ID", "(", "NUM"], "follows": [
+        "{", "break", ";", "if", "repeat", "return", "ID", "(", "NUM", "}",
+        "endif", "else", "until"
+    ]},
+"Expression" :{ "firsts": ["ID", "(", "NUM"],
+  "follows":[";", ")", "]", ","]},
+"B" :{ "firsts":
+                      ["=", "[", "(", "*", "+", "-", "<", "==", "EPSILON"],
+                      "follows":[";", ")", "]", ","]},
+"H" :{ "firsts": ["=", "*", "EPSILON", "+", "-", "<", "=="],
+  "follows": [";", ")", "]", ","]},
+"Simpleexpressionzegond" :{ "firsts":
+                                           ["(", "NUM"], "follows": [";", ")", "]", ","]},
+"Simpleexpressionprime" :{ "firsts": ["(", "*", "+", "-", "<", "==", "EPSILON"],
+  "follows": [";", ")", "]", ","]},
+"C" :{ "firsts": ["EPSILON", "<", "=="], "follows": [";", ")", "]", ","]},
+"Relop" :{ "firsts": ["<", "=="], "follows": ["(", "ID", "NUM"]},
+"Additiveexpression" :{ "firsts":
+                                       ["(", "ID", "NUM"],
+                                       "follows":     [";", ")", "]", ","]},
+"Additiveexpressionprime" :{ "firsts":
+                                            ["(", "*", "+", "-", "EPSILON"],
+                                            "follows":  ["<", "==", ";", ")", "]", ","]},
+"Additiveexpressionzegond" :{ "firsts":
+                                             ["(", "NUM"],
+                                             "follows":   ["<", "==", ";", ")", "]", ","]},
+"D" :{ "firsts": ["EPSILON", "+", "-"],
+  "follows":  ["<", "==", ";", ")", "]", ","]},
+"Addop" :{ "firsts": ["+", "-"], "follows": ["(", "ID", "NUM"]},
+"Term" :{ "firsts": ["(", "ID", "NUM"],
+  "follows":  ["+", "-", ";", ")", "<", "==", "]", ","]},
+"Termprime" :{ "firsts": ["(", "*", "EPSILON"],
+  "follows":  ["+", "-", "<", "==", ";", ")", "]", ","]},
+"Termzegond" :{ "firsts": ["(", "NUM"],
+  "follows":  ["+", "-", "<", "==", ";", ")", "]", ","]},
+"G" :{ "firsts": ["*", "EPSILON"],
+  "follows": ["+", "-", "<", "==", ";", ")", "]", ","]},
+"Factor" :{ "firsts": ["(", "ID", "NUM"],
+  "follows":    ["*", "+", "-", ";", ")", "<", "==", "]", ","]},
+"Varcallprime" :{ "firsts": ["(", "[", "EPSILON"],
+  "follows": ["*", "+", "-", ";", ")", "<", "==", "]", ","]},
+"Varprime" :{ "firsts": ["[", "EPSILON"],
+  "follows":  ["*", "+", "-", ";", ")", "<", "==", "]", ","]},
+"Factorprime" :{ "firsts": ["(", "EPSILON"],
+  "follows":      ["*", "+", "-", "<", "==", ";", ")", "]", ","]},
+"Factorzegond" :{ "firsts": ["(", "NUM"],
+  "follows":  ["*", "+", "-", "<", "==", ";", ")", "]", ","]},
+"Args" :{ "firsts": ["EPSILON", "ID", "(", "NUM"], "follows": [")"]},
+"Arglist" :{ "firsts": ["ID", "(", "NUM"], "follows": [")"]},
+"Arglistprime" :{ "firsts": [",", "EPSILON"], "follows": [")"]}
+}

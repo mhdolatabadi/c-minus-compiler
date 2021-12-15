@@ -1,5 +1,6 @@
-import scanner
 from anytree import Node, RenderTree
+import json
+import scanner
 
 
 def write_traversal(text):
@@ -29,19 +30,21 @@ def next_token():
     if index == None:
         index = 0
     char = scanner.get_next_token(index)
-    print(char)
     index += 1
+
+
+grammer = json.load(open('./data/grammer.json', 'r'))
 
 
 class TransitionDiagram:
     EOF = False
 
-    def __init__(self, name, firsts, follows):
+    def __init__(self, name):
         self.nodes_edges = dict()
         self.terminal_node = 0
         self.name = name
-        self.firsts = firsts
-        self.follows = follows
+        self.firsts = grammer[name.replace('-', '')]['firsts']
+        self.follows = grammer[name.replace('-', '')]['follows']
 
     def print_tree(self, root):
         for pre, fill, node in RenderTree(root):
@@ -59,11 +62,8 @@ class TransitionDiagram:
         self.nodes_edges[from_node][by] = to_node
 
     def traversal(self, errors, parent_node=Node('God'), edge_number: int = 0):
-        try:
-            if 'Unexpected' in errors[-1]:
-                return
-        except:
-            print('khob ke chi')
+        if errors and 'Unexpected' in errors[-1]:
+            return
         value = char['token_type'] if char['token_type'] in [
             'NUM', 'ID'
         ] else char['value']
@@ -98,27 +98,22 @@ class TransitionDiagram:
                 node.parent = parent_node
                 return True
         for i in edge:
-            print(self.name, i, value, edge[i], self.terminal_node)
             if value == '$' and type(i) == TransitionDiagram:
-                print('Unexpected EOF')
                 errors.append(
                     f'#{scanner.get_line_number() + 1} : syntax error, Unexpected EOF'
                 )
                 return False
             if i != value and type(i) != TransitionDiagram:
-                print('missing', i)
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, missing {i}'
                 )
                 return self.traversal(errors, parent_node, edge[i])
             if value in i.follows or value in self.follows:
-                print('missing', i.name)
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, missing {i.name}'
                 )
                 return self.traversal(errors, parent_node, edge[i])
             if value not in self.follows:
-                print('illegal', value)
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, illegal {value}'
                 )
@@ -126,122 +121,51 @@ class TransitionDiagram:
                 return self.traversal(errors, parent_node, edge_number)
 
 
-Program = TransitionDiagram('Program', ['int', 'void'], ['$'])
-Declarationlist = TransitionDiagram(
-    'Declaration-list', ['int', 'void', 'EPSILON'],
-    ['$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}'])
-Declaration = TransitionDiagram('Declaration', ['int', 'void'], [
-    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
-    'NUM', '}'
-])
-Declarationinitial = TransitionDiagram('Declaration-initial', ['int', 'void'],
-                                       ['(', ';', '[', ',', ')'])
-Declarationprime = TransitionDiagram('Declaration-prime', ['(', ';', '['], [
-    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
-    'NUM', '}'
-])
-Vardeclarationprime = TransitionDiagram('Var-declaration-prime', [';', '['], [
-    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
-    'NUM', '}'
-])
-Fundeclarationprime = TransitionDiagram('Fun-declaration-prime', ['('], [
-    'int', 'void', '$', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
-    'NUM', '}'
-])
-Typespecifier = TransitionDiagram('Type-specifier', ['int', 'void'], ['ID'])
-Params = TransitionDiagram('Params', ['int', 'void'], [')'])
-Paramlist = TransitionDiagram('Param-list', [',', 'EPSILON'], [')'])
-Param = TransitionDiagram('Param', ['int', 'void'], [',', ')'])
-Paramprime = TransitionDiagram('Param-prime', ['[', 'EPSILON'], [',', ')'])
-Compoundstmt = TransitionDiagram('Compound-stmt', ['{'], [
-    'int', 'void', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(',
-    'NUM', '}', 'endif', 'else', 'until'
-])
-Statementlist = TransitionDiagram(
-    'Statement-list',
-    ['EPSILON', '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM'],
-    ['}'])
-Statement = TransitionDiagram(
-    'Statement',
-    ['{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM'], [
-        '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
-        'endif', 'else', 'until'
-    ])
-Expressionstmt = TransitionDiagram(
-    'Expression-stmt', ['break', ';', 'ID', '(', 'NUM'], [
-        '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
-        'endif', 'else', 'until'
-    ])
-Selectionstmt = TransitionDiagram('Selection-stmt', ['if'], [
-    '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
-    'endif', 'else', 'until'
-])
-Elsestmt = TransitionDiagram('Else-stmt', ['endif', 'else'], [
-    '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
-    'endif', 'else', 'until'
-])
-Iterationstmt = TransitionDiagram('Iteration-stmt', ['repeat'], [
-    '{', 'break', ';', 'if', 'repeat', 'return', 'ID(', 'NUM', '}', 'endif',
-    'else', 'until'
-])
-Returnstmt = TransitionDiagram('Return-stmt', ['return'], [
-    '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
-    'endif', 'else', 'until'
-])
-Returnstmtprime = TransitionDiagram(
-    'Return-stmt-prime', [';', 'ID', '(', 'NUM'], [
-        '{', 'break', ';', 'if', 'repeat', 'return', 'ID', '(', 'NUM', '}',
-        'endif', 'else', 'until'
-    ])
-Expression = TransitionDiagram('Expression', ['ID', '(', 'NUM'],
-                               [';', ')', ']', ','])
-B = TransitionDiagram('B',
-                      ['=', '[', '(', '*', '+', '-', '<', '==', 'EPSILON'],
-                      [';', ')', ']', ','])
-H = TransitionDiagram('H', ['=', '*', 'EPSILON', '+', '-', '<', '=='],
-                      [';', ')', ']', ','])
-Simpleexpressionzegond = TransitionDiagram('Simple-expression-zegond',
-                                           ['(', 'NUM'], [';', ')', ']', ','])
-Simpleexpressionprime = TransitionDiagram(
-    'Simple-expression-prime', ['(', '*', '+', '-', '<', '==', 'EPSILON'],
-    [';', ')', ']', ','])
-C = TransitionDiagram('C', ['EPSILON', '<', '=='], [';', ')', ']', ','])
-Relop = TransitionDiagram('Relop', ['<', '=='], ['(', 'ID', 'NUM'])
-Additiveexpression = TransitionDiagram('Additive-expression',
-                                       ['(', 'ID', 'NUM'],
-                                       [';', ')', ']', ','])
-Additiveexpressionprime = TransitionDiagram('Additive-expression-prime',
-                                            ['(', '*', '+', '-', 'EPSILON'],
-                                            ['<', '==', ';', ')', ']', ','])
-Additiveexpressionzegond = TransitionDiagram('Additive-expression-zegond',
-                                             ['(', 'NUM'],
-                                             ['<', '==', ';', ')', ']', ','])
-D = TransitionDiagram('D', ['EPSILON', '+', '-'],
-                      ['<', '==', ';', ')', ']', ','])
-Addop = TransitionDiagram('Addop', ['+', '-'], ['(', 'ID', 'NUM'])
-Term = TransitionDiagram('Term', ['(', 'ID', 'NUM'],
-                         ['+', '-', ';', ')', '<', '==', ']', ','])
-Termprime = TransitionDiagram('Term-prime', ['(', '*', 'EPSILON'],
-                              ['+', '-', '<', '==', ';', ')', ']', ','])
-Termzegond = TransitionDiagram('Term-zegond', ['(', 'NUM'],
-                               ['+', '-', '<', '==', ';', ')', ']', ','])
-G = TransitionDiagram('G', ['*', 'EPSILON'],
-                      ['+', '-', '<', '==', ';', ')', ']', ','])
-Factor = TransitionDiagram('Factor', ['(', 'ID', 'NUM'],
-                           ['*', '+', '-', ';', ')', '<', '==', ']', ','])
-Varcallprime = TransitionDiagram(
-    'Var-call-prime', ['(', '[', 'EPSILON'],
-    ['*', '+', '-', ';', ')', '<', '==', ']', ','])
-Varprime = TransitionDiagram('Var-prime', ['[', 'EPSILON'],
-                             ['*', '+', '-', ';', ')', '<', '==', ']', ','])
-Factorprime = TransitionDiagram('Factor-prime', ['(', 'EPSILON'],
-                                ['*', '+', '-', '<', '==', ';', ')', ']', ','])
-Factorzegond = TransitionDiagram(
-    'Factor-zegond', ['(', 'NUM'],
-    ['*', '+', '-', '<', '==', ';', ')', ']', ','])
-Args = TransitionDiagram('Args', ['EPSILON', 'ID', '(', 'NUM'], [')'])
-Arglist = TransitionDiagram('Arg-list', ['ID', '(', 'NUM'], [')'])
-Arglistprime = TransitionDiagram('Arg-list-prime', [',', 'EPSILON'], [')'])
+Program = TransitionDiagram("Program")
+Declarationlist = TransitionDiagram("Declaration-list")
+Declaration = TransitionDiagram("Declaration")
+Declarationinitial = TransitionDiagram("Declaration-initial")
+Declarationprime = TransitionDiagram("Declaration-prime")
+Vardeclarationprime = TransitionDiagram("Var-declaration-prime")
+Fundeclarationprime = TransitionDiagram("Fun-declaration-prime")
+Typespecifier = TransitionDiagram("Type-specifier")
+Params = TransitionDiagram("Params")
+Paramlist = TransitionDiagram("Param-list")
+Param = TransitionDiagram("Param")
+Paramprime = TransitionDiagram("Param-prime")
+Compoundstmt = TransitionDiagram("Compound-stmt")
+Statementlist = TransitionDiagram("Statement-list")
+Statement = TransitionDiagram("Statement")
+Expressionstmt = TransitionDiagram("Expression-stmt")
+Selectionstmt = TransitionDiagram("Selection-stmt")
+Elsestmt = TransitionDiagram("Else-stmt")
+Iterationstmt = TransitionDiagram("Iteration-stmt")
+Returnstmt = TransitionDiagram("Return-stmt")
+Returnstmtprime = TransitionDiagram("Return-stmt-prime")
+Expression = TransitionDiagram("Expression")
+B = TransitionDiagram("B")
+H = TransitionDiagram("H")
+Simpleexpressionzegond = TransitionDiagram("Simple-expression-zegond")
+Simpleexpressionprime = TransitionDiagram("Simple-expression-prime")
+C = TransitionDiagram("C")
+Relop = TransitionDiagram("Relop")
+Additiveexpression = TransitionDiagram("Additive-expression")
+Additiveexpressionprime = TransitionDiagram("Additive-expression-prime")
+Additiveexpressionzegond = TransitionDiagram("Additive-expression-zegond")
+D = TransitionDiagram("D")
+Addop = TransitionDiagram("Addop")
+Term = TransitionDiagram("Term")
+Termprime = TransitionDiagram("Term-prime")
+Termzegond = TransitionDiagram("Term-zegond")
+G = TransitionDiagram("G")
+Factor = TransitionDiagram("Factor")
+Varcallprime = TransitionDiagram("Var-call-prime")
+Varprime = TransitionDiagram("Var-prime")
+Factorprime = TransitionDiagram("Factor-prime")
+Factorzegond = TransitionDiagram("Factor-zegond")
+Args = TransitionDiagram("Args")
+Arglist = TransitionDiagram("Arg-list")
+Arglistprime = TransitionDiagram("Arg-list-prime")
 
 Paramprime.add_node(0)
 Paramprime.add_node(1, False)
