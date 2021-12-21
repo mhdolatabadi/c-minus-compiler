@@ -1,0 +1,11 @@
+void main() {
+    int a;
+    int b;
+    20;
+    x;o;o=osalam;
+    a =) 5;
+    a = 0;
+    repeat {
+       a = a + 1;
+    } (a == 5)
+}

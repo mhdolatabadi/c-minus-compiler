@@ -2,8 +2,7 @@
 
 echo "" > log.txt
 echo "" > brief_results.txt
-#for dir in ../PA1_final_tests/*; do
-for dir in ./tests/*; do
+for dir in ./tests/scanner/*; do
     cp "${dir}/input.txt" ./input.txt
     python3 ./compiler.py
     printf "\n\n\n\n=====================================>>>>> Running Test ${dir}...\n" >> log.txt
@@ -17,6 +16,9 @@ for dir in ./tests/*; do
     printf "\n\n              *** symbol_table.txt diffrences ***\n" >> log.txt
     diff -s -y -B -W 250 -w ./symbol_table.txt "${dir}/symbol_table.txt" >> log.txt
     diff -y -B -W 250 -w -q ./symbol_table.txt "${dir}/symbol_table.txt" >> brief_results.txt
+    rm -rf ./symbol_table.txt ./lexical_errors.txt
 done
+cat ./brief_results.txt
+rm -rf *.txt
 
 
