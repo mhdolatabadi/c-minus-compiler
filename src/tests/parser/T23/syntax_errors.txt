@@ -1,0 +1,3 @@
+#6 : syntax error, illegal *
+#7 : syntax error, missing Factor
+#20 : syntax error, missing endif
