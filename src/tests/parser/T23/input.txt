@@ -1,0 +1,21 @@
+void main(void) {
+    int year;
+    int a;
+    year = 4;
+    if (year - 4 == 0) {
+        if (year - 3 == * 0) {
+            if (year - 2 * == 0) {
+                a = 10;
+            }
+	    else if (year - 1 == 0) {
+		a = 2;
+            } endif
+            endif
+        }
+        else {a = 3;} endif
+    }
+    else {
+	a = 4;
+    }
+    return 0;
+}

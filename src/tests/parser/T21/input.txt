@@ -1,0 +1,41 @@
+int main(void)
+{
+     int n;int rev;
+     int num;int digit;
+     rev = 0;
+     num=10;
+     n = num;
+     repeat
+     {
+         digit = num - 10;
+         rev = (rev * 10) + digit;
+         num = num - 10;
+     } until (num == 0);
+
+     if (n == rev) {n = 100;} else {n=1000;} endif
+    return 0;
+}
+
+void f(void) {
+  int num1;int num2; int i;int num;int digit; int sum;
+  num1 = 30;
+  num2 = 120;
+  i = num1;
+  repeat
+  {
+        sum = 0;
+        num = i;
+        repeat
+        {
+            digit = num - 10;
+            sum = sum + digit * digit * digit;
+        } until (sum == num2)
+
+        if(sum == i)
+        {
+            sum = sum;
+        } endif
+        i = i + 1;
+  } until (i == num2)
+  return 0;
+}
