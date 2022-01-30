@@ -1,5 +1,6 @@
 from anytree import Node, RenderTree
 import json
+from codegen import write_to_output
 import scanner
 
 
@@ -537,3 +538,5 @@ def run():
                 break
     else:
         write_syntax_error('There is no syntax error.')
+
+    write_to_output()
