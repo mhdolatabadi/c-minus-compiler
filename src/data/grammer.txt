@@ -3,10 +3,10 @@ Declaration-list -> Declaration Declaration-list | EPSILON
 Declaration -> Declaration-initial Declaration-prime
 Declaration-initial ->  Type-specifier #pid ID
 Declaration-prime -> Fun-declaration-prime | Var-declaration-prime
-Var-declaration-prime -> ; | [ NUM ] ; 
+Var-declaration-prime -> ; | [ #pnum NUM ] ; 
 Fun-declaration-prime ->  ( Params ) Compound-stmt
 Type-specifier -> int | void
-Params -> int #pid ID Param-prime Param-list | vodi
+Params -> int #pid ID Param-prime Param-list | void
 Param-list -> , Param Param-list | EPSILON
 Param -> Declaration-initial Param-prime
 Param-prime -> [  ] | EPSILON
@@ -16,7 +16,7 @@ Statement -> Expression-stmt | Compound-stmt | Selection-stmt | Iteration-stmt |
 Expression-stmt -> Expression ; | break ; | ;
 Selection-stmt -> if ( Expression #save_if) Statement Else-stmt
 Else-stmt -> #jpf endif | else #jpf_save Statement #jp endif
-Iteration-stmt -> repeat Statement until ( Expression #jpf ) 
+Iteration-stmt -> repeat #label Statement until ( Expression #jpf ) 
 Return-stmt -> return Return-stmt-prime
 Return-stmt-prime -> ; | Expression ;
 Expression -> Simple-expression-zegond | #pid ID B
@@ -24,22 +24,22 @@ B -> = Expression #assign | [ Expression ] H | Simple-expression-prime
 H -> = Expression #assign | G D C
 Simple-expression-zegond -> Additive-expression-zegond C
 Simple-expression-prime -> Additive-expression-prime C
-C -> Relop Additive-expression | EPSILON
-Relop -> < | ==
+C -> Relop Additive-expression #exec_op | EPSILON
+Relop -> #push_op < | #push_op ==
 Additive-expression -> Term D
 Additive-expression-prime -> Term-prime D
 Additive-expression-zegond -> Term-zegond D
-D -> Addop Term D | EPSILON
-Addop -> + | -
+D -> Addop Term #exec_op D | EPSILON
+Addop -> #push_op + | #push_op - 
 Term -> Factor G
 Term-prime -> Factor-prime G
 Term-zegond -> Factor-zegond G
-G -> * Factor G | EPSILON
-Factor -> ( Expression ) | #pid ID Var-call-prime | NUM
+G -> #push_op * Factor #exec_op G | EPSILON
+Factor -> ( Expression ) | #pid ID Var-call-prime | #pnum NUM
 Var-call-prime -> ( Args ) | Var-prime
 Var-prime -> [ Expression ] | EPSILON
 Factor-prime -> ( Args ) | EPSILON
-Factor-zegond -> ( Expression ) | NUM
+Factor-zegond -> ( Expression ) | #pnum NUM
 Args -> Arg-list | EPSILON
 Arg-list -> Expression Arg-list-prime
 Arg-list-prime -> , Expression Arg-list-prime | EPSILON
