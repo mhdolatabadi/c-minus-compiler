@@ -12,7 +12,7 @@
 
 class SemanticStack:
     def __init__(self):
-        self.stack = [1,2,3,4,5]
+        self.stack = []
 
     def push(self, element):
         self.stack.append(element)
@@ -32,7 +32,11 @@ class CodeGen:
     def __init__(self):
         self.program_block = []
         self.temp_count = -1
+        self.data_var_count = -1
         self.semantic_stack = SemanticStack()
+        self.symbol_table = {}
+        self.argument_pointer = 0
+        self.functions_address = {}
         self.actions = {
             "#pnum": self.pnum,
             "#pid": self.pid,
@@ -40,6 +44,12 @@ class CodeGen:
             "#exec_op": self.exec_op,
             "#push_op": self.push_op,
             "#label": self.label,
+            "#declare_id": self.declare_id,
+            "#jpf_save": self.jpf_save,
+            "#jp": self.jp,
+            "#pop": self.pop,
+            "#declare_func": self.declare_func,
+            "#pass_arg": self.pass_arg
         }
         self.operators = {
             '+': 'ADD',
@@ -49,48 +59,40 @@ class CodeGen:
             '<': 'LT'
         }
 
-
     def run(self, action_name, lexeme=None):
+        print(action_name, lexeme)
         self.actions[action_name](lexeme)
+        print("program block:" ,self.program_block)
+        print("semantic stack: ", self.semantic_stack.stack)
 
     def get_temp(self):
         self.temp_count += 1
         return (self.temp_count * 4) + 3000 
+    
+    def get_data_var(self):
+        self.data_var_count += 1
+        return (self.data_var_count * 4) + 500
 
     def find_addr(self, lexeme):
-        symbol_table = open('./symbol_table.txt', 'r')
-        for line in symbol_table:
-            if(line.split('\t')[1] == lexeme):
-                return line.split('.')[0]
+        if(self.symbol_table.keys().__contains__(lexeme)):
+            return self.symbol_table[lexeme]
+        else:
+            address = self.get_data_var()
+            self.symbol_table[lexeme] = address
+            return address
 
     def pid(self, lexeme):
-        address = self.find_addr(lexeme)
+        address = self.find_addr(lexeme['value'])
         self.semantic_stack.push(address)
 
     def pnum(self, lexeme):
         num = lexeme['value']
         self.semantic_stack.push(f'#{num}')
         
-
     def assign(self, lexeme):
         self.program_block.append(f'(ASSIGN, {self.semantic_stack.pop()}, {self.semantic_stack.stack[-1]}, )')
 
-    def label(self):
-        self.semantic_stack.push(len(self.program_block))
-
-    def jpf_save(self):
-        self.program_block[self.semantic_stack.pop()] = f'(JPF, {self.semantic_stack.pop()}, {len(self.program_block) + 1}, )'
-        self.semantic_stack.push(len(self.program_block))
-        self.semantic_stack.push('')
-
-    def jp(self):
-        self.program_block[self.semantic_stack.pop()] = f'(JP, {len(self.program_block)}, , )'
-
-    def jpf(self):
-        self.program_block[self.semantic_stack.pop()] = f'(JPF, {self.semantic_stack.pop()}, {len(self.program_block)}, )'
-
     def push_op(self, lexeme):
-        print(lexeme['value'])
         self.semantic_stack.push(self.operators[lexeme['value']])
         
     def exec_op(self, lexeme):
@@ -100,11 +102,6 @@ class CodeGen:
         result_temp = self.get_temp()
         self.program_block.append(f'({operator}, {first_operand}, {second_operand}, {result_temp})')
         self.semantic_stack.push(result_temp)
-    
-    def pop(self, lexeme):
-        self.semantic_stack.pop()
-
-
 
     def write_to_output(self):
         output = open('output.txt', 'w')

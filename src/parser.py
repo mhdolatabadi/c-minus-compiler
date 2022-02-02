@@ -37,11 +37,12 @@ def next_token():
 grammer = json.load(open('./data/grammer.json', 'r'))
 
 class Edge:
-    def __init__(self, from_node, by, to_node, action=None):
+    def __init__(self, from_node, by, to_node, pre_action=None, post_action=None):
         self.from_node = from_node
         self.by = by
         self.to_node = to_node
-        self.action = action
+        self.pre_action = pre_action
+        self.post_action = post_action
 
 code_gen = CodeGen()
 
@@ -56,10 +57,15 @@ class TransitionDiagram:
         self.firsts = grammer[name.replace('-', '')]['firsts']
         self.follows = grammer[name.replace('-', '')]['follows']
     
-    def get_edge_action(self, from_node, by, to_node):
+    def get_edge_pre_action(self, from_node, by, to_node):
         for edge in self.edges:
             if edge.from_node == from_node and edge.by == by and edge.to_node == to_node:
-                return edge.action
+                return edge.pre_action
+    
+    def get_edge_post_action(self, from_node, by, to_node):
+        for edge in self.edges:
+            if edge.from_node == from_node and edge.by == by and edge.to_node == to_node:
+                return edge.post_action
 
     def print_tree(self, root):
         for pre, fill, node in RenderTree(root):
@@ -72,8 +78,8 @@ class TransitionDiagram:
         if is_terminal:
             self.terminal_node = node_id
 
-    def add_edge(self, from_node: int, to_node: int, by, action=None):
-        self.edges.append(Edge(from_node, by, to_node, action))
+    def add_edge(self, from_node: int, to_node: int, by, pre_action=None, post_action=None):
+        self.edges.append(Edge(from_node, by, to_node, pre_action, post_action))
         self.nodes_edges[from_node][by] = to_node
 
     def traversal(self, errors, parent_node=Node('God'), edge_number: int = 0):
@@ -88,22 +94,25 @@ class TransitionDiagram:
             self.name
         ) if edge_number == 0 and self.name != 'Program' else parent_node
         for rule in edge:
-            action = self.get_edge_action(edge_number, rule, edge[rule])
+            pre_action = self.get_edge_pre_action(edge_number, rule, edge[rule])
+            post_action = self.get_edge_post_action(edge_number, rule, edge[rule])
             if type(rule) == TransitionDiagram and (
                     value in rule.firsts or
                 ('EPSILON' in rule.firsts and value in rule.follows)):
-                if action:
-                    code_gen.run(action, char)
+                if pre_action:
+                    code_gen.run(pre_action, char)
                 result = rule.traversal(errors, node)
                 if edge[rule] != self.terminal_node:
                     self.traversal(errors, node, edge[rule])
                 if edge_number == 0 and self.name != 'Program' and result:
                     node.parent = parent_node
+                if post_action:
+                    code_gen.run(post_action, char)
                 return True
             elif rule == char['value'] or (rule in ['NUM', 'ID']
                                            and char['token_type'] == rule):
-                if action:
-                    code_gen.run(action, char)
+                if pre_action:
+                    code_gen.run(pre_action, char)
                 leaf_node = Node(leaf_name)
                 leaf_node.parent = node
                 next_token()
@@ -111,35 +120,47 @@ class TransitionDiagram:
                     self.traversal(errors, node, edge[rule])
                 if edge_number == 0:
                     node.parent = parent_node
+                if post_action:
+                    code_gen.run(post_action, char)
                 return True
             elif rule == 'EPSILON':
-                if action:
-                    code_gen.run(action, char)
+                if pre_action:
+                    code_gen.run(pre_action, char)
                 leaf_node = Node('epsilon')
                 leaf_node.parent = node
                 node.parent = parent_node
+                if post_action:
+                    code_gen.run(post_action, char)
                 return True
         for i in edge:
             if value == '$' and type(i) == TransitionDiagram:
                 errors.append(
                     f'#{scanner.get_line_number() + 1} : syntax error, Unexpected EOF'
                 )
+                if post_action:
+                    code_gen.run(post_action, char)
                 return False
             if i != value and type(i) != TransitionDiagram:
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, missing {i}'
                 )
+                if post_action:
+                    code_gen.run(post_action, char)
                 return self.traversal(errors, parent_node, edge[i])
             if value in i.follows or value in self.follows:
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, missing {i.name}'
                 )
+                if post_action:
+                    code_gen.run(post_action, char)
                 return self.traversal(errors, parent_node, edge[i])
             if value not in self.follows:
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, illegal {value}'
                 )
                 next_token()
+                if post_action:
+                    code_gen.run(post_action, char)
                 return self.traversal(errors, parent_node, edge_number)
 
 
@@ -238,14 +259,14 @@ Fundeclarationprime.add_node(1)
 Fundeclarationprime.add_node(2)
 Fundeclarationprime.add_node(3)
 Fundeclarationprime.add_node(4, True)
-Fundeclarationprime.add_edge(0, 1, '(')
+Fundeclarationprime.add_edge(0, 1, '(', '#declare_func')
 Fundeclarationprime.add_edge(1, 2, Params)
 Fundeclarationprime.add_edge(2, 3, ')')
 Fundeclarationprime.add_edge(3, 4, Compoundstmt)
 
 Typespecifier.add_node(0)
 Typespecifier.add_node(1, True)
-Typespecifier.add_edge(0, 1, 'int')
+Typespecifier.add_edge(0, 1, 'int', None, '#declare_id')
 Typespecifier.add_edge(0, 1, 'void')
 
 Declarationprime.add_node(0)
@@ -300,7 +321,7 @@ Statement.add_edge(0, 1, Expressionstmt)
 Expressionstmt.add_node(0)
 Expressionstmt.add_node(1)
 Expressionstmt.add_node(2, True)
-Expressionstmt.add_edge(0, 1, Expression)
+Expressionstmt.add_edge(0, 1, Expression, None, '#pop')
 Expressionstmt.add_edge(1, 2, ';')
 Expressionstmt.add_edge(0, 1, 'break')
 Expressionstmt.add_edge(1, 2, ';')
@@ -315,7 +336,7 @@ Selectionstmt.add_node(5)
 Selectionstmt.add_node(6, True)
 Selectionstmt.add_edge(0, 1, 'if')
 Selectionstmt.add_edge(1, 2, '(')
-Selectionstmt.add_edge(2, 3, Expression)
+Selectionstmt.add_edge(2, 3, Expression, None, '#label')
 Selectionstmt.add_edge(3, 4, ')')
 Selectionstmt.add_edge(4, 5, Statement)
 Selectionstmt.add_edge(5, 6, Elsestmt)
@@ -326,7 +347,7 @@ Elsestmt.add_node(2)
 Elsestmt.add_node(3, True)
 Elsestmt.add_edge(0, 3, 'endif')
 Elsestmt.add_edge(0, 1, 'else')
-Elsestmt.add_edge(1, 2, Statement)
+Elsestmt.add_edge(1, 2, Statement, '#jpf_save', '#jp')
 Elsestmt.add_edge(2, 3, 'endif')
 
 Iterationstmt.add_node(0)
@@ -337,10 +358,10 @@ Iterationstmt.add_node(4)
 Iterationstmt.add_node(5)
 Iterationstmt.add_node(6, True)
 Iterationstmt.add_edge(0, 1, 'repeat')
-Iterationstmt.add_edge(1, 2, Statement)
+Iterationstmt.add_edge(1, 2, Statement, '#label')
 Iterationstmt.add_edge(2, 3, 'until')
 Iterationstmt.add_edge(3, 4, '(')
-Iterationstmt.add_edge(4, 5, Expression)
+Iterationstmt.add_edge(4, 5, Expression, None, '#jpf')
 Iterationstmt.add_edge(5, 6, ')')
 
 Returnstmt.add_node(0)
@@ -370,7 +391,7 @@ B.add_node(3)
 B.add_node(4, True)
 B.add_node(5)
 B.add_edge(0, 5, '=')
-B.add_edge(5, 4, Expression, '#assign')
+B.add_edge(5, 4, Expression, None, '#assign')
 B.add_edge(0, 1, '[')
 B.add_edge(1, 2, Expression)
 B.add_edge(2, 3, ']')
@@ -383,7 +404,7 @@ H.add_node(2)
 H.add_node(3)
 H.add_node(4, True)
 H.add_edge(0, 3, '=')
-H.add_edge(3, 4, Expression, '#assign')
+H.add_edge(3, 4, Expression, None, '#assign')
 H.add_edge(0, 1, G)
 H.add_edge(1, 2, D)
 H.add_edge(2, 4, C)
@@ -404,13 +425,13 @@ C.add_node(0)
 C.add_node(1)
 C.add_node(2, True)
 C.add_edge(0, 1, Relop)
-C.add_edge(1, 2, Additiveexpression, '#exec_op')
+C.add_edge(1, 2, Additiveexpression, None, '#exec_op')
 C.add_edge(0, 2, 'EPSILON')
 
 Relop.add_node(0)
 Relop.add_node(1, True)
-Relop.add_edge(0, 1, '<')
-Relop.add_edge(0, 1, '==')
+Relop.add_edge(0, 1, '<', '#push_op')
+Relop.add_edge(0, 1, '==', '#push_op')
 
 Additiveexpression.add_node(0)
 Additiveexpression.add_node(1)
@@ -488,7 +509,7 @@ Varcallprime.add_node(1)
 Varcallprime.add_node(2)
 Varcallprime.add_node(3, True)
 Varcallprime.add_edge(0, 1, '(')
-Varcallprime.add_edge(1, 2, Args)
+Varcallprime.add_edge(1, 2, Args, '#pass_arg')
 Varcallprime.add_edge(2, 3, ')')
 Varcallprime.add_edge(0, 3, Varprime)
 
@@ -506,7 +527,7 @@ Factorprime.add_node(1)
 Factorprime.add_node(2)
 Factorprime.add_node(3, True)
 Factorprime.add_edge(0, 1, '(')
-Factorprime.add_edge(1, 2, Args)
+Factorprime.add_edge(1, 2, Args, '#pass_arg')
 Factorprime.add_edge(2, 3, ')')
 Factorprime.add_edge(0, 3, 'EPSILON')
 

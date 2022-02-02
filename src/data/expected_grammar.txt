@@ -1,6 +1,5 @@
 Declaration -> #declare Declaration-initial Declaration-prime #pop
 Declaration-initial -> Type-specifier #declare_id #pid ID
-Var-declaration-prime -> [ #pnum NUM ] #declare_arr ;
 Fun-declaration-prime -> #declare_func #set_exec #scmod_t #sc_start ( #arg_init Params #arg_finish ) #scmod_f #sc_start Compound-stmt #sc_stop #scmod_f #sc_stop #scmod_t #return
 Params -> #declare int #declare_id #pid ID Param-prime #pop Param-list
 Param-list-void-abtar -> #declare_id #pid ID Param-prime Param-list
