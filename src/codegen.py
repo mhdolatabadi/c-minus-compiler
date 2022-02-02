@@ -43,13 +43,6 @@ class CodeGen:
             "#assign": self.assign,
             "#exec_op": self.exec_op,
             "#push_op": self.push_op,
-            "#label": self.label,
-            "#declare_id": self.declare_id,
-            "#jpf_save": self.jpf_save,
-            "#jp": self.jp,
-            "#pop": self.pop,
-            "#declare_func": self.declare_func,
-            "#pass_arg": self.pass_arg
         }
         self.operators = {
             '+': 'ADD',
