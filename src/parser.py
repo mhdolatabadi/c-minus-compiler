@@ -108,7 +108,8 @@ class TransitionDiagram:
                 if edge_number == 0 and self.name != 'Program' and result:
                     node.parent = parent_node
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return True
             elif rule == char['value'] or (rule in ['NUM', 'ID']
                                            and char['token_type'] == rule):
@@ -123,7 +124,8 @@ class TransitionDiagram:
                 if edge_number == 0:
                     node.parent = parent_node
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return True
             elif rule == 'EPSILON':
                 if pre_action:
@@ -133,7 +135,8 @@ class TransitionDiagram:
                 leaf_node.parent = node
                 node.parent = parent_node
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return True
         for i in edge:
             if value == '$' and type(i) == TransitionDiagram:
@@ -141,21 +144,24 @@ class TransitionDiagram:
                     f'#{scanner.get_line_number() + 1} : syntax error, Unexpected EOF'
                 )
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return False
             if i != value and type(i) != TransitionDiagram:
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, missing {i}'
                 )
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return self.traversal(errors, parent_node, edge[i])
             if value in i.follows or value in self.follows:
                 errors.append(
                     f'#{scanner.get_line_number()} : syntax error, missing {i.name}'
                 )
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return self.traversal(errors, parent_node, edge[i])
             if value not in self.follows:
                 errors.append(
@@ -163,7 +169,8 @@ class TransitionDiagram:
                 )
                 next_token()
                 if post_action:
-                    code_gen.run(post_action, char)
+                    for action in post_action:
+                        code_gen.run(action, char)
                 return self.traversal(errors, parent_node, edge_number)
 
 
@@ -394,7 +401,7 @@ B.add_node(3)
 B.add_node(4, True)
 B.add_node(5)
 B.add_edge(0, 5, '=')
-B.add_edge(5, 4, Expression, None, '#assign')
+B.add_edge(5, 4, Expression, None, ['#assign'])
 B.add_edge(0, 1, '[')
 B.add_edge(1, 2, Expression)
 B.add_edge(2, 3, ']')
@@ -407,7 +414,7 @@ H.add_node(2)
 H.add_node(3)
 H.add_node(4, True)
 H.add_edge(0, 3, '=')
-H.add_edge(3, 4, Expression, None, '#assign')
+H.add_edge(3, 4, Expression, None, ['#assign'])
 H.add_edge(0, 1, G)
 H.add_edge(1, 2, D)
 H.add_edge(2, 4, C)
@@ -428,7 +435,7 @@ C.add_node(0)
 C.add_node(1)
 C.add_node(2, True)
 C.add_edge(0, 1, Relop)
-C.add_edge(1, 2, Additiveexpression, None, '#exec_op')
+C.add_edge(1, 2, Additiveexpression, None, ['#exec_op'])
 C.add_edge(0, 2, 'EPSILON')
 
 Relop.add_node(0)
@@ -460,7 +467,7 @@ D.add_node(2)
 D.add_node(3, True)
 D.add_edge(0, 1, Addop)
 D.add_edge(1, 2, Term)
-D.add_edge(2, 3, D, '#exec_op')
+D.add_edge(2, 3, D, ['#exec_op'])
 D.add_edge(0, 3, 'EPSILON')
 
 Addop.add_node(0)
