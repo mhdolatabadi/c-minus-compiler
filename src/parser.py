@@ -37,7 +37,14 @@ def next_token():
 grammer = json.load(open('./data/grammer.json', 'r'))
 
 class Edge:
-    def __init__(self, from_node, by, to_node, pre_action=None, post_action=None):
+    def __init__(
+        self,
+        from_node,
+        by,
+        to_node,
+        pre_action=None,
+        post_action=None
+    ):
         self.from_node = from_node
         self.by = by
         self.to_node = to_node
@@ -71,18 +78,32 @@ class TransitionDiagram:
         for pre, fill, node in RenderTree(root):
             write_parse_tree("%s%s" % (pre, node.name))
 
-    def add_node(self,
-                 node_id: int,
-                 is_terminal: bool = False):
+    def add_node(
+        self,
+        node_id: int,
+        is_terminal: bool = False
+    ):
         self.nodes_edges[node_id] = dict()
         if is_terminal:
             self.terminal_node = node_id
 
-    def add_edge(self, from_node: int, to_node: int, by, pre_action=None, post_action=None):
+    def add_edge(
+        self,
+        from_node: int,
+        to_node: int,
+        by,
+        pre_action=None,
+        post_action=None
+    ):
         self.edges.append(Edge(from_node, by, to_node, pre_action, post_action))
         self.nodes_edges[from_node][by] = to_node
 
-    def traversal(self, errors, parent_node=Node('God'), edge_number: int = 0):
+    def traversal(
+        self,
+        errors,
+        parent_node=Node('God'),
+        edge_number: int = 0
+    ):
         if errors and 'Unexpected' in errors[-1]:
             return
         value = char['token_type'] if char['token_type'] in [
@@ -258,7 +279,7 @@ Vardeclarationprime.add_node(1)
 Vardeclarationprime.add_node(2)
 Vardeclarationprime.add_node(3)
 Vardeclarationprime.add_node(4, True)
-Vardeclarationprime.add_edge(0, 4, ';')
+Vardeclarationprime.add_edge(0, 4, ';', ['#declare_id'])
 Vardeclarationprime.add_edge(0, 1, '[')
 Vardeclarationprime.add_edge(1, 2, 'NUM', ['#pnum'])
 Vardeclarationprime.add_edge(2, 3, ']')
