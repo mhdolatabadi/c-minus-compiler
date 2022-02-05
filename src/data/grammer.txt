@@ -4,13 +4,13 @@ Declaration -> Declaration-initial Declaration-prime
 Declaration-initial ->  Type-specifier #pid ID
 Declaration-prime -> Fun-declaration-prime | Var-declaration-prime
 Var-declaration-prime -> #declare_id ; | [ #pnum NUM ] #declare_arr ; 
-Fun-declaration-prime ->  #declare_func ( Params ) Compound-stmt
+Fun-declaration-prime ->  #declare_func ( Params ) #scope_start Compound-stmt #scope_end 
 Type-specifier -> int | void
 Params -> int #pid ID Param-prime Param-list | void
 Param-list -> , Param Param-list | EPSILON
 Param -> Declaration-initial Param-prime
 Param-prime -> [  ] #declare_array_parameter | EPSILON #declare_id_parameter
-Compound-stmt -> { #scope_start Declaration-list Statement-list #scope_end} 
+Compound-stmt -> { Declaration-list Statement-list } 
 Statement-list -> Statement Statement-list | EPSILON
 Statement -> Expression-stmt | Compound-stmt | Selection-stmt | Iteration-stmt | Return-stmt
 Expression-stmt -> Expression ; | break ; | ;

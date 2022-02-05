@@ -11,6 +11,7 @@
 # PRINT A
 
 from array import ArrayType
+from tokenize import Token
 from scanner import SymbolTable
 
 class Stack:
@@ -162,7 +163,7 @@ class CodeGen:
         pass
 
     def pid(self):
-        record = SymbolTable.get_record_by_name(self.current_token['value'])
+        record = SymbolTable.get_record_by_name(self.current_token.lexeme)
         if not record.address or record.address == 0:
             address = self.get_data_var()
             record.address = address
@@ -170,14 +171,14 @@ class CodeGen:
         
         
     def pnum(self):
-        num = self.current_token['value']
+        num = self.current_token.lexeme
         self.semantic_stack.push(f'#{num}')
 
     def assign(self):
         self.program_block.append(f'(ASSIGN, {self.semantic_stack.pop()}, {self.semantic_stack.stack[-1]}, )')
 
     def push_op(self):
-        self.semantic_stack.push(self.operators[self.current_token['value']])
+        self.semantic_stack.push(self.operators[self.current_token.lexeme])
         
     def exec_op(self):
         second_operand = self.semantic_stack.pop()
@@ -193,8 +194,8 @@ class CodeGen:
             output.write(line + '\n')
         output.close()
 
-    def run(self, action_name, token=None):
-        print(action_name, token)
+    def run(self, action_name, token:Token=None):
+        print(action_name, token.lexeme)
         self.current_token = token
         self.actions[action_name]()
         print("program block:", self.program_block)

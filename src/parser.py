@@ -37,38 +37,39 @@ def next_token():
 grammer = json.load(open('./data/grammer.json', 'r'))
 code_gen = CodeGen()
 
+class Action:
+    def __init__(self, name, expected_token: str = None):
+        self.name = name
+        self.expected_token = expected_token
+
 class Edge:
     def __init__(
         self,
         src,
         token,
         dst,
-        pre_actions=None,
-        post_actions=None
     ):
         self.src = src
         self.token = token
         self.dst = dst
-        self.pre_actions = pre_actions
-        self.post_actions = post_actions
 
-    def run_pre_actions(self):
-        if(self.pre_actions):
-            for action in self.pre_actions:
-                code_gen.run(action, token)
-    
-    def run_post_actions(self):
-        if(self.post_actions):
-            for action in self.post_actions:
-                code_gen.run(action, token)
 
 
 
 class Node:
-    def __init__(self, node_id, is_terminal):
+    def __init__(self, node_id, is_terminal, actions):
         self.node_id = node_id
         self.is_terminal = is_terminal
         self.edges = []
+        self.actions = actions
+    
+    def run_actions(self):
+        if self.actions:
+            for action in self.actions:
+                if (token.lexeme == action.expected_token or
+                 token.type == action.expected_token or
+                  not action.expected_token):
+                    code_gen.run(action.name, token)
 
 class TransitionDiagram:
     EOF = False
@@ -88,9 +89,10 @@ class TransitionDiagram:
     def add_node(
         self,
         node_id: int,
-        is_terminal: bool = False
+        is_terminal: bool = False,
+        actions: Action = None
     ):
-        node = Node(node_id, is_terminal)
+        node = Node(node_id, is_terminal, actions)
         self.nodes.append(node)
 
     def get_node_by_id(self, node_id: int) -> Node:
@@ -103,11 +105,9 @@ class TransitionDiagram:
         src: int,
         dst: int,
         token,
-        pre_action=None,
-        post_action=None
     ):
         node = self.get_node_by_id(src)
-        node.edges.append(Edge(src, token, dst, pre_action, post_action))
+        node.edges.append(Edge(src, token, dst))
 
     def traversal(
         self,
@@ -125,6 +125,9 @@ class TransitionDiagram:
         leaf_name = f"({token.type}, {token.lexeme})" if value != '$' else value
 
         current_node = self.get_node_by_id(current_node_id)
+        current_node.run_actions()
+
+
 
         tree_node = TreeNode(
             self.name
@@ -140,11 +143,12 @@ class TransitionDiagram:
 
                 if not self.get_node_by_id(edge.dst).is_terminal:
                     self.traversal(errors, tree_node, edge.dst)
+                else:
+                    self.get_node_by_id(edge.dst).run_actions()
 
                 if current_node_id == 0 and self.name != 'Program' and result:
                     tree_node.parent = parent_node
 
-                edge.run_post_actions()
                 return True
 
             if edge.token == token.lexeme or (edge.token in ['NUM', 'ID']
@@ -156,11 +160,13 @@ class TransitionDiagram:
 
                 if not self.get_node_by_id(edge.dst).is_terminal:
                     self.traversal(errors, tree_node, edge.dst)
+                else:
+                    self.get_node_by_id(edge.dst).run_actions()
+
 
                 if current_node_id == 0:
                     tree_node.parent = parent_node
 
-                edge.run_post_actions()
                 return True
 
             if edge.token == 'EPSILON':
@@ -168,7 +174,6 @@ class TransitionDiagram:
                 TreeNode('epsilon', tree_node)
                 tree_node.parent = parent_node
 
-                edge.run_post_actions()
                 return True
 
         #syntax errors
@@ -247,18 +252,67 @@ Args = TransitionDiagram("Args")
 Arglist = TransitionDiagram("Arg-list")
 Arglistprime = TransitionDiagram("Arg-list-prime")
 
-Paramprime.add_node(0)
-Paramprime.add_node(1)
-Paramprime.add_node(2, True)
-Paramprime.add_edge(0, 1, '[')
-Paramprime.add_edge(1, 2, ']', None, ['#declare_array_parameter'])
-Paramprime.add_edge(0, 2, 'EPSILON', None, ['#declare_id_parameter'])
 
-Param.add_node(0)
-Param.add_node(1)
-Param.add_node(2, True)
-Param.add_edge(0, 1, Declarationinitial)
-Param.add_edge(1, 2, Paramprime)
+Declarationlist.add_node(0)
+Declarationlist.add_node(1)
+Declarationlist.add_node(2, True)
+Declarationlist.add_edge(0, 1, Declaration)
+Declarationlist.add_edge(1, 2, Declarationlist)
+Declarationlist.add_edge(0, 2, 'EPSILON')
+
+Declaration.add_node(0)
+Declaration.add_node(1)
+Declaration.add_node(2, True)
+Declaration.add_edge(0, 1, Declarationinitial)
+Declaration.add_edge(1, 2, Declarationprime)
+
+Declarationinitial.add_node(0)
+Declarationinitial.add_node(1, False, [Action('#pid', 'ID')])
+Declarationinitial.add_node(2, True)
+Declarationinitial.add_edge(0, 1, Typespecifier)
+Declarationinitial.add_edge(1, 2, 'ID')
+
+Declarationprime.add_node(0)
+Declarationprime.add_node(1, True)
+Declarationprime.add_edge(0, 1, Fundeclarationprime)
+Declarationprime.add_edge(0, 1, Vardeclarationprime)
+
+Vardeclarationprime.add_node(0, False, [Action('#declare_id', ';')])
+Vardeclarationprime.add_node(1, False, [Action('#pnum', 'NUM')])
+Vardeclarationprime.add_node(2)
+Vardeclarationprime.add_node(3, False, [Action('#declare_arr', ';')])
+Vardeclarationprime.add_node(4, True)
+Vardeclarationprime.add_edge(0, 4, ';')
+Vardeclarationprime.add_edge(0, 1, '[')
+Vardeclarationprime.add_edge(1, 2, 'NUM')
+Vardeclarationprime.add_edge(2, 3, ']')
+Vardeclarationprime.add_edge(3, 4, ';')
+
+Fundeclarationprime.add_node(0, False, [Action('#declare_func', '(')])
+Fundeclarationprime.add_node(1)
+Fundeclarationprime.add_node(2)
+Fundeclarationprime.add_node(3, False, [Action('#scope_start')])
+Fundeclarationprime.add_node(4, True, [Action('#scope_end')])
+Fundeclarationprime.add_edge(0, 1, '(')
+Fundeclarationprime.add_edge(1, 2, Params)
+Fundeclarationprime.add_edge(2, 3, ')')
+Fundeclarationprime.add_edge(3, 4, Compoundstmt)
+
+Typespecifier.add_node(0)
+Typespecifier.add_node(1, True)
+Typespecifier.add_edge(0, 1, 'int')
+Typespecifier.add_edge(0, 1, 'void')
+
+Params.add_node(0)
+Params.add_node(1, False, [Action('#pid', 'ID')])
+Params.add_node(2)
+Params.add_node(3)
+Params.add_node(4, True)
+Params.add_edge(0, 1, 'int')
+Params.add_edge(1, 2, 'ID')
+Params.add_edge(2, 3, Paramprime)
+Params.add_edge(3, 4, Paramlist)
+Params.add_edge(0, 4, 'void')
 
 Paramlist.add_node(0)
 Paramlist.add_node(1)
@@ -269,66 +323,18 @@ Paramlist.add_edge(1, 2, Param)
 Paramlist.add_edge(2, 3, Paramlist)
 Paramlist.add_edge(0, 3, 'EPSILON')
 
-Params.add_node(0)
-Params.add_node(1)
-Params.add_node(2)
-Params.add_node(3)
-Params.add_node(4, True)
-Params.add_edge(0, 1, 'int')
-Params.add_edge(1, 2, 'ID', ['#pid'])
-Params.add_edge(2, 3, Paramprime)
-Params.add_edge(3, 4, Paramlist)
-Params.add_edge(0, 4, 'void')
+Param.add_node(0)
+Param.add_node(1)
+Param.add_node(2, True)
+Param.add_edge(0, 1, Declarationinitial)
+Param.add_edge(1, 2, Paramprime)
 
-Vardeclarationprime.add_node(0)
-Vardeclarationprime.add_node(1)
-Vardeclarationprime.add_node(2)
-Vardeclarationprime.add_node(3)
-Vardeclarationprime.add_node(4, True)
-Vardeclarationprime.add_edge(0, 4, ';', ['#declare_id'])
-Vardeclarationprime.add_edge(0, 1, '[')
-Vardeclarationprime.add_edge(1, 2, 'NUM', ['#pnum'])
-Vardeclarationprime.add_edge(2, 3, ']', None, ['#declare_arr'])
-Vardeclarationprime.add_edge(3, 4, ';')
-
-Fundeclarationprime.add_node(0)
-Fundeclarationprime.add_node(1)
-Fundeclarationprime.add_node(2)
-Fundeclarationprime.add_node(3)
-Fundeclarationprime.add_node(4, True)
-Fundeclarationprime.add_edge(0, 1, '(', ['#declare_func'])
-Fundeclarationprime.add_edge(1, 2, Params)
-Fundeclarationprime.add_edge(2, 3, ')')
-Fundeclarationprime.add_edge(3, 4, Compoundstmt)
-
-Typespecifier.add_node(0)
-Typespecifier.add_node(1, True)
-Typespecifier.add_edge(0, 1, 'int')
-Typespecifier.add_edge(0, 1, 'void')
-
-Declarationprime.add_node(0)
-Declarationprime.add_node(1, True)
-Declarationprime.add_edge(0, 1, Fundeclarationprime)
-Declarationprime.add_edge(0, 1, Vardeclarationprime)
-
-Declarationinitial.add_node(0)
-Declarationinitial.add_node(1)
-Declarationinitial.add_node(2, True)
-Declarationinitial.add_edge(0, 1, Typespecifier)
-Declarationinitial.add_edge(1, 2, 'ID', ['#pid'])
-
-Declaration.add_node(0)
-Declaration.add_node(1)
-Declaration.add_node(2, True)
-Declaration.add_edge(0, 1, Declarationinitial)
-Declaration.add_edge(1, 2, Declarationprime)
-
-Declarationlist.add_node(0)
-Declarationlist.add_node(1)
-Declarationlist.add_node(2, True)
-Declarationlist.add_edge(0, 1, Declaration)
-Declarationlist.add_edge(1, 2, Declarationlist)
-Declarationlist.add_edge(0, 2, 'EPSILON')
+Paramprime.add_node(0, False, [Action('#declare_id_parameter', 'EPSILON')])
+Paramprime.add_node(1, False, [Action('#declare_array_parameter', ']')])
+Paramprime.add_node(2, True)
+Paramprime.add_edge(0, 1, '[')
+Paramprime.add_edge(1, 2, ']')
+Paramprime.add_edge(0, 2, 'EPSILON')
 
 Compoundstmt.add_node(0)
 Compoundstmt.add_node(1)
@@ -414,37 +420,40 @@ Returnstmtprime.add_edge(0, 1, Expression)
 Returnstmtprime.add_edge(1, 2, ';')
 Returnstmtprime.add_edge(0, 2, ';')
 
-Expression.add_node(0)
+Expression.add_node(0, False, [Action('#pid', 'ID')])
 Expression.add_node(1)
 Expression.add_node(2, True)
 Expression.add_edge(0, 2, Simpleexpressionzegond)
-Expression.add_edge(0, 1, 'ID', ['#pid'])
+Expression.add_edge(0, 1, 'ID')
 Expression.add_edge(1, 2, B)
 
 B.add_node(0)
 B.add_node(1)
-B.add_node(2)
+B.add_node(2, True, [Action('#assign')])
 B.add_node(3)
-B.add_node(4, True)
+B.add_node(4)
 B.add_node(5)
-B.add_edge(0, 5, '=')
-B.add_edge(5, 4, Expression, None, ['#assign'])
-B.add_edge(0, 1, '[')
+B.add_node(6, True)
+B.add_node(7, True)
+B.add_edge(0, 1, '=')
 B.add_edge(1, 2, Expression)
-B.add_edge(2, 3, ']')
-B.add_edge(3, 4, H)
-B.add_edge(0, 4, Simpleexpressionprime)
+B.add_edge(0, 3, '[')
+B.add_edge(3, 4, Expression)
+B.add_edge(4, 5, ']')
+B.add_edge(5, 6, H)
+B.add_edge(0, 7, Simpleexpressionprime)
 
 H.add_node(0)
 H.add_node(1)
-H.add_node(2)
+H.add_node(2, True, [Action('#assign')])
 H.add_node(3)
-H.add_node(4, True)
-H.add_edge(0, 3, '=')
-H.add_edge(3, 4, Expression, None, ['#assign'])
-H.add_edge(0, 1, G)
-H.add_edge(1, 2, D)
-H.add_edge(2, 4, C)
+H.add_node(4)
+H.add_node(5, True)
+H.add_edge(0, 1, '=')
+H.add_edge(1, 2, Expression)
+H.add_edge(0, 3, G)
+H.add_edge(3, 4, D)
+H.add_edge(4, 5, C)
 
 Simpleexpressionzegond.add_node(0)
 Simpleexpressionzegond.add_node(1)
@@ -460,15 +469,16 @@ Simpleexpressionprime.add_edge(1, 2, C)
 
 C.add_node(0)
 C.add_node(1)
-C.add_node(2, True)
+C.add_node(2, True, [Action('#exec_op')])
+C.add_node(3, True)
 C.add_edge(0, 1, Relop)
-C.add_edge(1, 2, Additiveexpression, None, ['#exec_op'])
-C.add_edge(0, 2, 'EPSILON')
+C.add_edge(1, 2, Additiveexpression)
+C.add_edge(0, 3, 'EPSILON')
 
-Relop.add_node(0)
+Relop.add_node(0, False, [Action('#push_op')])
 Relop.add_node(1, True)
-Relop.add_edge(0, 1, '<', ['#push_op'])
-Relop.add_edge(0, 1, '==', ['#push_op'])
+Relop.add_edge(0, 1, '<')
+Relop.add_edge(0, 1, '==')
 
 Additiveexpression.add_node(0)
 Additiveexpression.add_node(1)
@@ -490,17 +500,17 @@ Additiveexpressionzegond.add_edge(1, 2, D)
 
 D.add_node(0)
 D.add_node(1)
-D.add_node(2)
+D.add_node(2, False, [Action('#exec_op')])
 D.add_node(3, True)
 D.add_edge(0, 1, Addop)
 D.add_edge(1, 2, Term)
-D.add_edge(2, 3, D, ['#exec_op'])
+D.add_edge(2, 3, D)
 D.add_edge(0, 3, 'EPSILON')
 
-Addop.add_node(0)
+Addop.add_node(0, False, [Action('#push_op')])
 Addop.add_node(1, True)
-Addop.add_edge(0, 1, '+', ['#push_op'])
-Addop.add_edge(0, 1, '-', ['#push_op'])
+Addop.add_edge(0, 1, '+')
+Addop.add_edge(0, 1, '-')
 
 Term.add_node(0)
 Term.add_node(1)
@@ -520,16 +530,16 @@ Termzegond.add_node(2, True)
 Termzegond.add_edge(0, 1, Factorzegond)
 Termzegond.add_edge(1, 2, G)
 
-G.add_node(0)
+G.add_node(0, False, [Action('#push_op', '*')])
 G.add_node(1)
-G.add_node(2)
+G.add_node(2, False, [Action('#exec_op')])
 G.add_node(3, True)
 G.add_edge(0, 1, '*')
 G.add_edge(1, 2, Factor)
-G.add_edge(2, 3, G, ['#exec_op'])
+G.add_edge(2, 3, G)
 G.add_edge(0, 3, 'EPSILON')
 
-Factor.add_node(0)
+Factor.add_node(0, False, [Action('#pid', 'ID'), Action('#pnum', 'NUM')])
 Factor.add_node(1)
 Factor.add_node(2)
 Factor.add_node(3)
@@ -537,8 +547,8 @@ Factor.add_node(4, True)
 Factor.add_edge(0, 1, '(')
 Factor.add_edge(1, 2, Expression)
 Factor.add_edge(2, 4, ')')
-Factor.add_edge(0, 4, 'NUM', ['#pnum'])
-Factor.add_edge(0, 3, 'ID', ['#pid'])
+Factor.add_edge(0, 4, 'NUM')
+Factor.add_edge(0, 3, 'ID')
 Factor.add_edge(3, 4, Varcallprime)
 
 Varcallprime.add_node(0)
@@ -568,14 +578,14 @@ Factorprime.add_edge(1, 2, Args)
 Factorprime.add_edge(2, 3, ')')
 Factorprime.add_edge(0, 3, 'EPSILON')
 
-Factorzegond.add_node(0)
+Factorzegond.add_node(0, False, [Action('#pnum', 'NUM')])
 Factorzegond.add_node(1)
 Factorzegond.add_node(2)
 Factorzegond.add_node(3, True)
 Factorzegond.add_edge(0, 1, '(')
 Factorzegond.add_edge(1, 2, Expression)
 Factorzegond.add_edge(2, 3, ')')
-Factorzegond.add_edge(0, 3, 'NUM', ['#pnum'])
+Factorzegond.add_edge(0, 3, 'NUM')
 
 Args.add_node(0)
 Args.add_node(1, True)
