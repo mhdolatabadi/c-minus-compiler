@@ -10,6 +10,9 @@
 # JP L
 # PRINT A
 
+from array import ArrayType
+from scanner import SymbolTable
+
 class Stack:
     def __init__(self):
         self.stack = []
@@ -19,6 +22,9 @@ class Stack:
 
     def pop(self):
         return self.stack.pop()
+
+    def get_stack(self):
+        return self.stack
 
 
 class Parameter:
@@ -32,10 +38,18 @@ class Function:
         self.address = address
         self.parameters = []
 
-
 class Array:
-    def __init__(self):
-        pass
+    def __init__(self, name, offset, length):
+        self.name = name
+        self.offset = offset
+        self.length = length
+
+class Scope:
+    def __init__(self, scope_type):
+        self.variables = []
+        self.scope_type = scope_type
+
+
 
 
 class CodeGen:
@@ -52,8 +66,9 @@ class CodeGen:
         self.data_var_count = -1
         self.semantic_stack = Stack()
         self.functions = []
+        self.arrays = []
         self.paramter_declration = False
-        self.symbol_table = {}
+        self.current_token = None
 
         self.actions = {
             "#pnum": self.pnum,
@@ -61,8 +76,13 @@ class CodeGen:
             "#assign": self.assign,
             "#exec_op": self.exec_op,
             "#push_op": self.push_op,
-            "#declare_id": self.declare_id
+            "#declare_id": self.declare_id,
+            "#declare_array": self.declare_array,
+            "#declare_func": self.declare_func,
+            "#declare_array_parameter": self.declare_array_parameter,
+            "#declare_id_parameter": self.declare_id_parameter,
         }
+
         self.operators = {
             '+': 'ADD',
             '*': 'MULT',
@@ -71,11 +91,8 @@ class CodeGen:
             '<': 'LT'
         }
 
-    def run(self, action_name, token=None):
-        print(action_name, token)
-        self.actions[action_name](token)
-        print("program block:", self.program_block)
-        print("semantic stack: ", self.semantic_stack.stack)
+
+    #memory management
 
     def get_temp(self):
         self.temp_count += 1
@@ -85,55 +102,62 @@ class CodeGen:
         self.data_var_count += 1
         return (self.data_var_count * 4) + 500
 
-    def find_addr(self, token):
-        if(self.symbol_table.keys().__contains__(token)):
-            return self.symbol_table[token]
-        else:
-            address = self.get_data_var()
-            self.symbol_table[token] = address
-            return address
-
-    def pid(self, token):
-        address = self.find_addr(token['value'])
-        self.semantic_stack.push(address)
-
-    def pnum(self, token):
-        num = token['value']
-        self.semantic_stack.push(f'#{num}')
-
 
     #declarations
-    def declare_id(self, token):
-        self.semantic_stack.pop(); #pop the pid that had pushed to stack
-        address = self.get_data_var()
-        self.symbol_table[token['value']] = address
-        self.program_block.append(f'(ASSIGN, #0, {address}, )')
 
-    def declare_func(self, token):
-        function = Function('', len(self.program_block))
+    def declare_id(self):
+        address = self.semantic_stack.pop()
+        record = SymbolTable.get_record_by_address(address)
+        record.type = 'Id'
+
+    def declare_array(self):
+        array_size = self.semantic_stack.pop()[1:]
+        address = self.semantic_stack.pop()
+        record = SymbolTable.get_record_by_address(address)
+        record.type = 'Array'
+        record.size = array_size
+        array = Array(record.token, record.address, array_size)
+        self.arrays.append(array)
+        self.data_var_count += array_size - 1
+
+    def declare_func(self):
+        address = self.semantic_stack.pop()
+        record = SymbolTable.get_record_by_address(address)
+        record.type = 'Function'
+        function = Function(record.token, record.address)
         self.functions.append(function)
 
-    def declare_id_parameter(self, token):
-        self.paramter_declration = True
-        pid = self.semantic_stack.pop()
-        parameter = Parameter(pid, self.get_data_var())
+    def declare_array_parameter(self):
+        address = self.semantic_stack.pop()
+        record = SymbolTable.get_record_by_address(address)
+        parameter = Parameter(record.token, address)
         self.functions[-1].parameters.append(parameter)
 
-    def declare_array_parameter(self, token):
-        pass
+    def declare_id_parameter(self):
+        address = self.semantic_stack.pop()
+        record = SymbolTable.get_record_by_address(address)
+        parameter = Parameter(record.token, address)
+        self.functions[-1].parameters.append(parameter)
 
+    def pid(self):
+        record = SymbolTable.get_record_by_name(self.current_token['value'])
+        if not record.address or record.address == 0:
+            address = self.get_data_var()
+            record.address = address
+        self.semantic_stack.push(record.address)
+        
 
-    def call_func(self, token):
-        func_addr = self.semantic_stack.pop()
+    def pnum(self):
+        num = self.current_token['value']
+        self.semantic_stack.push(f'#{num}')
 
-
-    def assign(self, token):
+    def assign(self):
         self.program_block.append(f'(ASSIGN, {self.semantic_stack.pop()}, {self.semantic_stack.stack[-1]}, )')
 
-    def push_op(self, token):
-        self.semantic_stack.push(self.operators[token['value']])
+    def push_op(self):
+        self.semantic_stack.push(self.operators[self.current_token['value']])
         
-    def exec_op(self, token):
+    def exec_op(self):
         second_operand = self.semantic_stack.pop()
         operator = self.semantic_stack.pop()
         first_operand = self.semantic_stack.pop()
@@ -146,3 +170,10 @@ class CodeGen:
         for line in self.program_block:
             output.write(line + '\n')
         output.close()
+
+    def run(self, action_name, token=None):
+        print(action_name, token)
+        self.current_token = token
+        self.actions[action_name]()
+        print("program block:", self.program_block)
+        print("semantic stack: ", self.semantic_stack.stack)

@@ -33,6 +33,7 @@
 # WHITESPACE tokens.
 
 # This is scanner module of compiler.
+from os import stat
 import re
 
 KEYWORD = r"if|else|void|int|repeat|break|until|return|endif"
@@ -58,6 +59,41 @@ def token_type_enhancer(dfa, token_type: str):
         return "SYMBOL"
     return token_type
 
+class Record:
+    def __init__(self, number, token, address=0, record_type=None, size=1):
+        self.token = token
+        self.number = number
+        self.address = address
+        self.type = record_type
+        self.size = size
+
+class SymbolTable:
+    records = []
+
+    @staticmethod
+    def add_record(record: Record):
+        for i in SymbolTable.records:
+            if i.token == record.token:
+                return
+        SymbolTable.records.append(record)
+
+
+    def get_record_by_name(token: str) -> Record:
+        for record in SymbolTable.records:
+            if record.token == token:
+                return record
+
+    def get_record_by_address(address: str) -> Record:
+        for record in SymbolTable.records:
+            if record.address == address:
+                return record
+
+    @staticmethod
+    def export_to_file():
+        symbol_file = open("symbol_table.txt", "w")
+        for record in SymbolTable.records:
+            symbol_file.write(f"{record.number}.\t{record.token}\n")
+        symbol_file.close()
 
 class DFA:
     def __init__(self):
@@ -70,6 +106,10 @@ class DFA:
         self.last_token = ''
         self.identifiers = list()
         self.line_number = 1
+        keywords = ['if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return', 'endif']
+        for i in range(1, len(keywords) - 1):
+            SymbolTable.add_record(Record(i, keywords[i - 1]))
+
 
     def add_node(self,
                  node_id: int,
@@ -135,6 +175,8 @@ class DFA:
                     'token_type': token_type,
                     'value': self.value
                 })
+                if token_type == "ID":
+                    SymbolTable.add_record(Record(len(SymbolTable.records), self.value))
             self.last_token = token_type
             self.value = ''
             return 0
@@ -248,6 +290,9 @@ def get_next_token(index: int):
         return "END"
 
 
+
+
+
 def run():
     input_file = open("input.txt")
     line_number = 1
@@ -278,7 +323,6 @@ def run():
                 # extract token dictionray key and value and append it to string which should be write in the file
                 writable += f"({token_dict['token_type']}, {token_dict['value']}) "
             token_file.write(f"{i}.\t{writable}\n")
-
     token_file.close()
 
     lexical_file = open("lexical_errors.txt", "w")
@@ -292,18 +336,10 @@ def run():
         lexical_file.write("There is no lexical error.")
     lexical_file.close()
 
-    #symbol table
-    symbol_file = open("symbol_table.txt", "w")
-    keywords = [
-        'if', 'else', 'void', 'int', 'repeat', 'break', 'until', 'return',
-        'endif'
-    ]
-    # add keywords
-    for i in range(1, len(keywords) + 1):
-        symbol_file.write(f"{i}.\t{keywords[i - 1]}\n")
-    # remove redundant elements from list
-    dfa.identifiers = list(dict.fromkeys(dfa.identifiers))
-    for i in range(1, len(dfa.identifiers) + 1):
-        # [i - 1] because range starts with 1
-        symbol_file.write(f"{i + len(keywords)}.\t{dfa.identifiers[i - 1]}\n")
-    symbol_file.close()
+    SymbolTable.export_to_file()
+    
+
+
+
+
+
