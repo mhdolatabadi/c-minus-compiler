@@ -168,6 +168,7 @@ class CodeGen:
             record.address = address
         self.semantic_stack.push(record.address)
         
+        
     def pnum(self):
         num = self.current_token['value']
         self.semantic_stack.push(f'#{num}')

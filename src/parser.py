@@ -35,6 +35,7 @@ def next_token():
 
 
 grammer = json.load(open('./data/grammer.json', 'r'))
+code_gen = CodeGen()
 
 class Edge:
     def __init__(
@@ -42,16 +43,25 @@ class Edge:
         src,
         token,
         dst,
-        pre_action=None,
-        post_action=None
+        pre_actions=None,
+        post_actions=None
     ):
         self.src = src
         self.token = token
         self.dst = dst
-        self.pre_action = pre_action
-        self.post_action = post_action
+        self.pre_actions = pre_actions
+        self.post_actions = post_actions
 
-code_gen = CodeGen()
+    def run_pre_actions(self):
+        if(self.pre_actions):
+            for action in self.pre_actions:
+                code_gen.run(action, token)
+    
+    def run_post_actions(self):
+        if(self.post_actions):
+            for action in self.post_actions:
+                code_gen.run(action, token)
+
 
 
 class Node:
@@ -63,7 +73,7 @@ class Node:
 class TransitionDiagram:
     EOF = False
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.nodes = []
         self.nodes_edges = dict()
         self.terminal_node = 0
@@ -71,16 +81,6 @@ class TransitionDiagram:
         self.firsts = grammer[name.replace('-', '')]['firsts']
         self.follows = grammer[name.replace('-', '')]['follows']
     
-    def get_edge_pre_action(self, from_node, by, to_node):
-        for edge in self.edges:
-            if edge.from_node == from_node and edge.by == by and edge.to_node == to_node:
-                return edge.pre_action
-    
-    def get_edge_post_action(self, from_node, by, to_node):
-        for edge in self.edges:
-            if edge.from_node == from_node and edge.by == by and edge.to_node == to_node:
-                return edge.post_action
-
     def print_tree(self, root):
         for pre, fill, node in RenderTree(root):
             write_parse_tree("%s%s" % (pre, node.name))
@@ -93,7 +93,7 @@ class TransitionDiagram:
         node = Node(node_id, is_terminal)
         self.nodes.append(node)
 
-    def get_node_by_id(self, node_id) -> Node:
+    def get_node_by_id(self, node_id: int) -> Node:
         for node in self.nodes:
             if node.node_id == node_id:
                 return node
@@ -112,7 +112,7 @@ class TransitionDiagram:
     def traversal(
         self,
         errors,
-        parent_node=TreeNode('God'),
+        parent_node: TreeNode = TreeNode('God'),
         current_node_id: int = 0
     ):
         if errors and 'Unexpected' in errors[-1]:
@@ -135,25 +135,43 @@ class TransitionDiagram:
             if type(edge.token) == TransitionDiagram and (
                     value in edge.token.firsts or
                 ('EPSILON' in edge.token.firsts and value in edge.token.follows)):
+
                 result = edge.token.traversal(errors, tree_node)
+
                 if not self.get_node_by_id(edge.dst).is_terminal:
                     self.traversal(errors, tree_node, edge.dst)
+
                 if current_node_id == 0 and self.name != 'Program' and result:
                     tree_node.parent = parent_node
+
+                edge.run_post_actions()
                 return True
+
             if edge.token == token.lexeme or (edge.token in ['NUM', 'ID']
                                            and token.type == edge.token):
+
                 TreeNode(leaf_name, tree_node)
+
                 next_token()
+
                 if not self.get_node_by_id(edge.dst).is_terminal:
                     self.traversal(errors, tree_node, edge.dst)
+
                 if current_node_id == 0:
                     tree_node.parent = parent_node
+
+                edge.run_post_actions()
                 return True
+
             if edge.token == 'EPSILON':
+
                 TreeNode('epsilon', tree_node)
                 tree_node.parent = parent_node
+
+                edge.run_post_actions()
                 return True
+
+        #syntax errors
         for edge in current_node.edges:
             line_number = scanner.get_line_number()
             if value == '$' and type(edge.token) == TransitionDiagram:
@@ -161,16 +179,20 @@ class TransitionDiagram:
                     f'#{line_number + 1} : syntax error, Unexpected EOF'
                 )
                 return False
+
             if edge.token != value and type(edge.token) != TransitionDiagram:
                 errors.append(
                     f'#{line_number} : syntax error, missing {edge.token}'
                 )
                 return self.traversal(errors, parent_node, edge.dst)
             if value in edge.token.follows or value in self.follows:
+
                 errors.append(
                     f'#{line_number} : syntax error, missing {edge.token.name}'
                 )
+
                 return self.traversal(errors, parent_node, edge.dst)
+
             if value not in self.follows:
                 errors.append(
                     f'#{line_number} : syntax error, illegal {value}'
