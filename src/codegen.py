@@ -44,10 +44,13 @@ class Array:
         self.offset = offset
         self.length = length
 
+class Variable:
+    def __init__(self):
+        pass
+
 class Scope:
-    def __init__(self, scope_type):
+    def __init__(self):
         self.variables = []
-        self.scope_type = scope_type
 
 
 
@@ -62,13 +65,18 @@ class CodeGen:
     }
     def __init__(self):
         self.program_block = []
+
         self.temp_count = -1
         self.data_var_count = -1
+
         self.semantic_stack = Stack()
+
         self.functions = []
         self.arrays = []
-        self.paramter_declration = False
+        self.scopes = []
+
         self.current_token = None
+        self.current_scope = None
 
         self.actions = {
             "#pnum": self.pnum,
@@ -81,6 +89,8 @@ class CodeGen:
             "#declare_func": self.declare_func,
             "#declare_array_parameter": self.declare_array_parameter,
             "#declare_id_parameter": self.declare_id_parameter,
+            "#scope_start": self.scope_start,
+            "#scope_end": self.scope_end,
         }
 
         self.operators = {
@@ -139,6 +149,18 @@ class CodeGen:
         parameter = Parameter(record.token, address)
         self.functions[-1].parameters.append(parameter)
 
+    # scopes
+    def scope_start(self):
+        scope = Scope()
+        self.scopes.append(scope)
+        self.current_scope = scope
+
+    def scope_end(self):
+        pass
+
+    def call_func(self):
+        pass
+
     def pid(self):
         record = SymbolTable.get_record_by_name(self.current_token['value'])
         if not record.address or record.address == 0:
@@ -146,7 +168,6 @@ class CodeGen:
             record.address = address
         self.semantic_stack.push(record.address)
         
-
     def pnum(self):
         num = self.current_token['value']
         self.semantic_stack.push(f'#{num}')

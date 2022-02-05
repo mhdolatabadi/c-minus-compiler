@@ -10,7 +10,7 @@ Params -> int #pid ID Param-prime Param-list | void
 Param-list -> , Param Param-list | EPSILON
 Param -> Declaration-initial Param-prime
 Param-prime -> [  ] #declare_array_parameter | EPSILON #declare_id_parameter
-Compound-stmt -> { Declaration-list Statement-list } 
+Compound-stmt -> { #scope_start Declaration-list Statement-list #scope_end} 
 Statement-list -> Statement Statement-list | EPSILON
 Statement -> Expression-stmt | Compound-stmt | Selection-stmt | Iteration-stmt | Return-stmt
 Expression-stmt -> Expression ; | break ; | ;
@@ -38,7 +38,7 @@ G -> #push_op * Factor #exec_op G | EPSILON
 Factor -> ( Expression ) | #pid ID Var-call-prime | #pnum NUM
 Var-call-prime -> ( Args ) #call_func | Var-prime
 Var-prime -> [ Expression ] | EPSILON
-Factor-prime -> ( #func_args_start Args ) | EPSILON
+Factor-prime -> ( Args ) | EPSILON
 Factor-zegond -> ( Expression ) | #pnum NUM
 Args -> Arg-list | EPSILON
 Arg-list -> Expression Arg-list-prime
