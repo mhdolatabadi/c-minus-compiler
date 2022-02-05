@@ -95,6 +95,11 @@ class SymbolTable:
             symbol_file.write(f"{record.number}.\t{record.token}\n")
         symbol_file.close()
 
+class Token:
+    def __init__(self, lexeme, token_type):
+        self.lexeme = lexeme
+        self.type = token_type
+
 class DFA:
     def __init__(self):
         self.terminal_nodes = set()
@@ -171,10 +176,7 @@ class DFA:
                 token_type = token_type_enhancer(self, token_type)
                 if token_type == 'SYMBOL' and self.value[0] == '*':
                     self.value = '*'
-                self.tokens[self.line_number].append({
-                    'token_type': token_type,
-                    'value': self.value
-                })
+                self.tokens[self.line_number].append(Token(self.value, token_type))
                 if token_type == "ID":
                     SymbolTable.add_record(Record(len(SymbolTable.records), self.value))
             self.last_token = token_type
@@ -267,7 +269,8 @@ def get_line_number():
     return token_line_number
 
 
-def get_next_token(index: int):
+
+def get_next_token(index: int) -> Token:
     run()
     tokens = []
     global token_line_number
@@ -279,11 +282,11 @@ def get_next_token(index: int):
                 token_line_number = i
             counter += 1
 
-    tokens.append({'token_type': 'EOF', 'value': '$'})
+    tokens.append(Token('$', 'EOF'))
     with open('input.txt') as f:
         count = sum(1 for _ in f)
     try:
-        if tokens[index] == {'token_type': 'EOF', 'value': '$'}:
+        if tokens[index].type == 'EOF' and tokens[index].lexeme == '$':
             token_line_number = count
         return tokens[index]
     except:
@@ -321,7 +324,7 @@ def run():
             writable = ""
             for token_dict in dfa.tokens[i]:
                 # extract token dictionray key and value and append it to string which should be write in the file
-                writable += f"({token_dict['token_type']}, {token_dict['value']}) "
+                writable += f"({token_dict.type}, {token_dict.lexeme}) "
             token_file.write(f"{i}.\t{writable}\n")
     token_file.close()
 

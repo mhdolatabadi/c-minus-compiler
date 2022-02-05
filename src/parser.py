@@ -26,11 +26,11 @@ index = None
 
 
 def next_token():
-    global char
+    global token
     global index
     if index == None:
         index = 0
-    char = scanner.get_next_token(index)
+    token = scanner.get_next_token(index)
     index += 1
 
 
@@ -117,10 +117,12 @@ class TransitionDiagram:
     ):
         if errors and 'Unexpected' in errors[-1]:
             return
-        value = char['token_type'] if char['token_type'] in [
+        
+        value = token.type if token.type in [
             'NUM', 'ID'
-        ] else char['value']
-        leaf_name = f"({char['token_type']}, {char['value']})" if value != '$' else value
+        ] else token.lexeme
+
+        leaf_name = f"({token.type}, {token.lexeme})" if value != '$' else value
 
         current_node = self.get_node_by_id(current_node_id)
 
@@ -139,40 +141,39 @@ class TransitionDiagram:
                 if current_node_id == 0 and self.name != 'Program' and result:
                     tree_node.parent = parent_node
                 return True
-            elif edge.token == char['value'] or (edge.token in ['NUM', 'ID']
-                                           and char['token_type'] == edge.token):
-                leaf_node = TreeNode(leaf_name)
-                leaf_node.parent = tree_node
+            if edge.token == token.lexeme or (edge.token in ['NUM', 'ID']
+                                           and token.type == edge.token):
+                TreeNode(leaf_name, tree_node)
                 next_token()
                 if not self.get_node_by_id(edge.dst).is_terminal:
                     self.traversal(errors, tree_node, edge.dst)
                 if current_node_id == 0:
                     tree_node.parent = parent_node
                 return True
-            elif edge.token == 'EPSILON':
-                leaf_node = TreeNode('epsilon')
-                leaf_node.parent = tree_node
+            if edge.token == 'EPSILON':
+                TreeNode('epsilon', tree_node)
                 tree_node.parent = parent_node
                 return True
-        for i in current_node.edges:
-            if value == '$' and type(i.token) == TransitionDiagram:
+        for edge in current_node.edges:
+            line_number = scanner.get_line_number()
+            if value == '$' and type(edge.token) == TransitionDiagram:
                 errors.append(
-                    f'#{scanner.get_line_number() + 1} : syntax error, Unexpected EOF'
+                    f'#{line_number + 1} : syntax error, Unexpected EOF'
                 )
                 return False
-            if i.token != value and type(i.token) != TransitionDiagram:
+            if edge.token != value and type(edge.token) != TransitionDiagram:
                 errors.append(
-                    f'#{scanner.get_line_number()} : syntax error, missing {i.token}'
+                    f'#{line_number} : syntax error, missing {edge.token}'
                 )
-                return self.traversal(errors, parent_node, i.dst)
-            if value in i.token.follows or value in self.follows:
+                return self.traversal(errors, parent_node, edge.dst)
+            if value in edge.token.follows or value in self.follows:
                 errors.append(
-                    f'#{scanner.get_line_number()} : syntax error, missing {i.token.name}'
+                    f'#{line_number} : syntax error, missing {edge.token.name}'
                 )
-                return self.traversal(errors, parent_node, i.dst)
+                return self.traversal(errors, parent_node, edge.dst)
             if value not in self.follows:
                 errors.append(
-                    f'#{scanner.get_line_number()} : syntax error, illegal {value}'
+                    f'#{line_number} : syntax error, illegal {value}'
                 )
                 next_token()
                 return self.traversal(errors, parent_node, current_node_id)
