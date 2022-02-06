@@ -10,9 +10,10 @@
 # JP L
 # PRINT A
 
-from array import ArrayType
-from tokenize import Token
+
+
 from scanner import SymbolTable
+
 
 class Stack:
     def __init__(self):
@@ -46,8 +47,10 @@ class Array:
         self.length = length
 
 class Variable:
-    def __init__(self):
-        pass
+    def __init__(self, name, address, var_type):
+        self.name = name
+        self.address = address
+        self.type = var_type
 
 class Scope:
     def __init__(self):
@@ -71,13 +74,14 @@ class CodeGen:
         self.data_var_count = -1
 
         self.semantic_stack = Stack()
+        self.arg_stack = Stack()
 
         self.functions = []
         self.arrays = []
         self.scopes = []
 
         self.current_token = None
-        self.current_scope = None
+        self.current_scope = Scope()
 
         self.actions = {
             "#pnum": self.pnum,
@@ -92,6 +96,8 @@ class CodeGen:
             "#declare_id_parameter": self.declare_id_parameter,
             "#scope_start": self.scope_start,
             "#scope_end": self.scope_end,
+            "#arg_start": self.arg_start,
+            "#call_func": self.call_func,
         }
 
         self.operators = {
@@ -120,6 +126,8 @@ class CodeGen:
         address = self.semantic_stack.pop()
         record = SymbolTable.get_record_by_address(address)
         record.type = 'Id'
+        var = Variable(record.token, record.address, 'Id')
+        self.current_scope.variables.append(var)
 
     def declare_array(self):
         array_size = self.semantic_stack.pop()[1:]
@@ -130,6 +138,8 @@ class CodeGen:
         array = Array(record.token, record.address, array_size)
         self.arrays.append(array)
         self.data_var_count += array_size - 1
+        var = Variable(record.name, address, 'Array')
+        self.current_scope.variables.append(var)
 
     def declare_func(self):
         address = self.semantic_stack.pop()
@@ -137,18 +147,24 @@ class CodeGen:
         record.type = 'Function'
         function = Function(record.token, record.address)
         self.functions.append(function)
+        var = Variable(record.token, address, 'Function')
+        self.current_scope.variables.append(var)
 
     def declare_array_parameter(self):
         address = self.semantic_stack.pop()
         record = SymbolTable.get_record_by_address(address)
         parameter = Parameter(record.token, address)
         self.functions[-1].parameters.append(parameter)
+        var = Variable(record.token, address, 'Array')
+        self.current_scope.variables.append(var)
 
     def declare_id_parameter(self):
         address = self.semantic_stack.pop()
         record = SymbolTable.get_record_by_address(address)
         parameter = Parameter(record.token, address)
         self.functions[-1].parameters.append(parameter)
+        var = Variable(record.token, address, 'Id')
+        self.current_scope.variables.append(var)
 
     # scopes
     def scope_start(self):
@@ -157,10 +173,29 @@ class CodeGen:
         self.current_scope = scope
 
     def scope_end(self):
-        pass
+        self.scopes.pop()
+
+
+    #function call
+    def arg_start(self):
+        self.semantic_stack.push('arg_start')
 
     def call_func(self):
-        pass
+        func_address = 0
+        function = None
+        for i in range(len(self.semantic_stack.satck)):
+            element = self.semantic_stack.pop()
+            if element != 'arg_start':
+                self.arg_stack.push(element)
+            else:
+                func_address = self.semantic_stack.pop()
+        for f in self.functions:
+            if f.address == func_address:
+                function = f
+        if function.name == 'output':
+            self.program_block.append(f'(PRINT, {self.arg_stack.pop()}, , )')
+        self.program_block.append(f'(JP, {func_address}, , )')
+
 
     def pid(self):
         record = SymbolTable.get_record_by_name(self.current_token.lexeme)
@@ -194,7 +229,7 @@ class CodeGen:
             output.write(line + '\n')
         output.close()
 
-    def run(self, action_name, token:Token=None):
+    def run(self, action_name, token=None):
         print(action_name, token.lexeme)
         self.current_token = token
         self.actions[action_name]()

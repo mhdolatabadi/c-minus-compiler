@@ -1,26 +1,26 @@
 Program -> Declaration-list $
 Declaration-list -> Declaration Declaration-list | EPSILON 
-Declaration -> Declaration-initial Declaration-prime
-Declaration-initial ->  Type-specifier #pid ID
+Declaration -> #declare Declaration-initial Declaration-prime #pop
+Declaration-initial ->  Type-specifier #declare_id #pid ID
 Declaration-prime -> Fun-declaration-prime | Var-declaration-prime
-Var-declaration-prime -> #declare_id ; | [ #pnum NUM ] #declare_arr ; 
-Fun-declaration-prime ->  #declare_func ( Params ) #scope_start Compound-stmt #scope_end 
+Var-declaration-prime -> ; | [ #pnum NUM ] #declare_arr ; 
+Fun-declaration-prime ->  #declare_func #set_exec #scmod_t #sc_start ( #arg_init Params #arg_finish ) #scmod_f #sc_start Compound-stmt #sc_stop #scmod_f #sc_stop #scmod_t #return 
 Type-specifier -> int | void
-Params -> int #pid ID Param-prime Param-list | void
+Params -> #declare int #declare_id #pid ID Param-prime #pop Param-list | void
 Param-list -> , Param Param-list | EPSILON
-Param -> Declaration-initial Param-prime
-Param-prime -> [  ] #declare_array_parameter | EPSILON #declare_id_parameter
+Param -> #declare Declaration-initial Param-prime #pop
+Param-prime -> [  ] | EPSILON
 Compound-stmt -> { Declaration-list Statement-list } 
 Statement-list -> Statement Statement-list | EPSILON
 Statement -> Expression-stmt | Compound-stmt | Selection-stmt | Iteration-stmt | Return-stmt
-Expression-stmt -> Expression ; | break ; | ;
-Selection-stmt -> if ( Expression #jpf_if) Statement  Else-stmt
-Else-stmt -> #jpf_save_if endif | else #jpf_save_if Statement endif #jp_save_if
+Expression-stmt -> Expression #pop ; | break #scmod_c #prison ; | ;
+Selection-stmt -> if ( Expression ) #hold #scmod_s #sc_start Statement #sc_stop #scmod_s #scmod_t #prison #decide Else-stmt
+Else-stmt -> endif | else #scmod_s #sc_start Statement #sc_stop #scmod_s #scmod_t #prison_break endif
 Iteration-stmt -> repeat #label Statement until ( Expression #jpf ) 
-Return-stmt -> return Return-stmt-prime
-Return-stmt-prime -> ; | Expression ;
+Return-stmt -> return Return-stmt-prime #scmod_f #prison
+Return-stmt-prime -> ; | #prv Expression #assign #pop ;
 Expression -> Simple-expression-zegond | #pid ID B
-B -> = Expression #assign | [ Expression ] H | Simple-expression-prime
+B -> = Expression #assign | [ Expression ] #parr H | Simple-expression-prime
 H -> = Expression #assign | G D C
 Simple-expression-zegond -> Additive-expression-zegond C
 Simple-expression-prime -> Additive-expression-prime C
@@ -36,9 +36,9 @@ Term-prime -> Factor-prime G
 Term-zegond -> Factor-zegond G
 G -> #push_op * Factor #exec_op G | EPSILON
 Factor -> ( Expression ) | #pid ID Var-call-prime | #pnum NUM
-Var-call-prime -> ( Args ) #call_func | Var-prime
-Var-prime -> [ Expression ] | EPSILON
-Factor-prime -> ( Args ) | EPSILON
+Var-call-prime -> ( #arg_pass Args ) #call | Var-prime
+Var-prime -> [ Expression ] #parr | EPSILON
+Factor-prime -> ( #arg_pass Args ) #call | EPSILON
 Factor-zegond -> ( Expression ) | #pnum NUM
 Args -> Arg-list | EPSILON
 Arg-list -> Expression Arg-list-prime
